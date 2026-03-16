@@ -1,0 +1,98 @@
+{
+    "name": "@lemoncloud/react-page-transition",
+    "version": "0.0.1",
+    "description": "iOS/Android style page transitions for React using View Transitions API",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./styles.css": "./dist/styles.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup && cp src/styles/page-transition.css dist/styles.css",
+        "dev": "tsup --watch",
+        "test": "vitest",
+        "test:run": "vitest run",
+        "test:coverage": "vitest --coverage",
+        "lint": "eslint src --ext .ts,.tsx",
+        "typecheck": "tsc --noEmit",
+        "prepublishOnly": "pnpm build",
+        "changeset": "changeset",
+        "version": "changeset version",
+        "release": "pnpm build && changeset publish"
+    },
+    "peerDependencies": {
+        "react": ">=18.0.0",
+        "react-router-dom": ">=6.0.0"
+    },
+    "devDependencies": {
+        "@changesets/changelog-github": "^0.5.0",
+        "@changesets/cli": "^2.27.0",
+        "@eslint/js": "^9.0.0",
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "^16.0.0",
+        "@types/node": "^22.0.0",
+        "@types/react": "^18.3.0",
+        "@types/react-dom": "^18.3.0",
+        "@typescript-eslint/eslint-plugin": "^8.0.0",
+        "@typescript-eslint/parser": "^8.0.0",
+        "@vitejs/plugin-react": "^4.3.0",
+        "eslint": "^9.0.0",
+        "eslint-plugin-react-hooks": "^5.0.0",
+        "jsdom": "^25.0.0",
+        "prettier": "^3.4.0",
+        "react": "^18.3.0",
+        "react-dom": "^18.3.0",
+        "react-router-dom": "^6.28.0",
+        "tsup": "^8.3.0",
+        "typescript": "^5.7.0",
+        "vitest": "^3.0.0"
+    },
+    "keywords": [
+        "react",
+        "page-transition",
+        "view-transitions",
+        "animation",
+        "ios",
+        "android",
+        "navigation",
+        "react-router"
+    ],
+    "author": "LemonCloud <opensource@lemoncloud.io>",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lemoncloud-io/react-page-transition.git"
+    },
+    "homepage": "https://github.com/lemoncloud-io/react-page-transition#readme",
+    "bugs": {
+        "url": "https://github.com/lemoncloud-io/react-page-transition/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "packageManager": "pnpm@9.15.0"
+}
