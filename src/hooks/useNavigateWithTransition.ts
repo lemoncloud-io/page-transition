@@ -11,6 +11,9 @@ import type { To } from 'react-router-dom';
  * A wrapper hook around useNavigate that adds view transition support.
  * By default, all navigations will use view transitions with auto-detected platform animations.
  *
+ * - `replace: true` automatically disables transition (for tab bar navigation)
+ * - Use `transition: true` explicitly to override this behavior
+ *
  * @param config - Optional configuration for platform-specific animations
  * @returns Navigate function with view transition support
  *
@@ -35,6 +38,12 @@ import type { To } from 'react-router-dom';
  *
  * // Navigation without transition (for tab switches)
  * navigate('/explore', { transition: false });
+ *
+ * // Replace navigation - no transition by default (tab bar)
+ * navigate('/home', { replace: true });
+ *
+ * // Replace with transition (explicit override)
+ * navigate('/home', { replace: true, transition: true });
  * ```
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): NavigateWithTransitionFn => {
@@ -42,10 +51,14 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
 
     const navigateWithTransition = useCallback(
         (to: To | number, options?: TransitionNavigateOptions) => {
-            const { transition = true, ...navigateOptions } = options ?? {};
+            const { transition, ...navigateOptions } = options ?? {};
+
+            // replace: true defaults to no transition (tab bar navigation)
+            // explicit transition: true/false overrides this behavior
+            const shouldTransition = transition ?? !navigateOptions.replace;
 
             // Skip transition if not supported or disabled
-            if (!transition || !document.startViewTransition) {
+            if (!shouldTransition || !document.startViewTransition) {
                 if (typeof to === 'number') {
                     navigate(to);
                 } else {

@@ -266,9 +266,11 @@ A wrapper around React Router's `useNavigate` that adds view transition support.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `transition` | `boolean` | `true` | Enable/disable transition animation |
-| `replace` | `boolean` | `false` | Replace current history entry |
+| `transition` | `boolean` | `true` (or `false` if `replace: true`) | Enable/disable transition animation |
+| `replace` | `boolean` | `false` | Replace current history entry (disables transition by default) |
 | `state` | `any` | - | State to pass to the new location |
+
+> **Note:** When `replace: true` is set, transitions are automatically disabled. This is ideal for tab bar navigation where you want instant switches. Use `transition: true` explicitly to override this behavior.
 
 #### Examples
 
@@ -290,11 +292,12 @@ const navigate = useNavigateWithTransition({
 });
 
 // Usage
-navigate('/path');                           // Forward with transition
-navigate(-1);                                // Back with transition
-navigate('/path', { transition: false });    // No transition
-navigate('/path', { replace: true });        // Replace history
-navigate('/path', { state: { from: '/' } }); // With state
+navigate('/path');                                        // Forward with transition
+navigate(-1);                                             // Back with transition
+navigate('/path', { transition: false });                 // No transition
+navigate('/path', { replace: true });                     // Replace history (no transition)
+navigate('/path', { replace: true, transition: true });   // Replace with transition
+navigate('/path', { state: { from: '/' } });              // With state
 ```
 
 ### `useGoBack(config?)`
