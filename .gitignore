@@ -3,6 +3,7 @@ node_modules/
 
 # Build
 dist/
+*.tsbuildinfo
 
 # Coverage
 coverage/
@@ -21,6 +22,9 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Claude
+.claude/
 
 # Environment
 .env

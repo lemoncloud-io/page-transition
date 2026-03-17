@@ -76,35 +76,25 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 document.documentElement.classList.add(ANDROID_PLATFORM_CLASS);
             }
 
-            // Handle numeric navigation (e.g., -1 for back)
-            if (typeof to === 'number') {
-                const isBack = to < 0;
-
-                // Add back-navigation class for reverse animation
-                if (isBack) {
-                    document.documentElement.classList.add(BACK_NAVIGATION_CLASS);
-                }
-
-                const viewTransition = document.startViewTransition(() => {
-                    navigate(to);
-                });
-
-                // Remove classes after transition completes
-                viewTransition.finished.finally(() => {
-                    document.documentElement.classList.remove(BACK_NAVIGATION_CLASS);
-                    document.documentElement.classList.remove(ANDROID_PLATFORM_CLASS);
-                });
-            } else {
-                // For path navigation, use startViewTransition
-                const viewTransition = document.startViewTransition(() => {
-                    navigate(to, navigateOptions);
-                });
-
-                // Remove platform class after transition completes
-                viewTransition.finished.finally(() => {
-                    document.documentElement.classList.remove(ANDROID_PLATFORM_CLASS);
-                });
+            // Add back-navigation class for reverse animation (numeric negative navigation)
+            const isBack = typeof to === 'number' && to < 0;
+            if (isBack) {
+                document.documentElement.classList.add(BACK_NAVIGATION_CLASS);
             }
+
+            // Start view transition
+            const viewTransition = document.startViewTransition(() => {
+                if (typeof to === 'number') {
+                    navigate(to);
+                } else {
+                    navigate(to, navigateOptions);
+                }
+            });
+
+            // Remove classes after transition completes
+            viewTransition.finished.finally(() => {
+                document.documentElement.classList.remove(BACK_NAVIGATION_CLASS, ANDROID_PLATFORM_CLASS);
+            });
         },
         [navigate, config]
     );

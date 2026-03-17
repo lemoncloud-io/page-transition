@@ -10,17 +10,24 @@ concurrency:
     cancel-in-progress: true
 
 permissions:
-    contents: write
-    pull-requests: write
-    id-token: write # Required for npm OIDC trusted publishing
+    contents: read
 
 jobs:
     release:
         name: Release
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            issues: write
+            pull-requests: write
+            id-token: write
+
         steps:
             - name: Checkout
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
 
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
@@ -43,13 +50,8 @@ jobs:
             - name: Run tests
               run: pnpm test:run
 
-            - name: Create Release PR or Publish
-              uses: changesets/action@v1
-              with:
-                  version: pnpm changeset version
-                  publish: pnpm changeset publish
-                  commit: 'chore: version packages'
-                  title: 'chore: version packages'
+            - name: Release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: pnpm dlx semantic-release

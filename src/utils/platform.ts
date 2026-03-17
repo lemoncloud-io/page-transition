@@ -1,4 +1,4 @@
-import type { PlatformType } from '../types';
+import type { PageTransitionConfig, PlatformType } from '../types';
 
 /**
  * Detects the current platform based on navigator.userAgent.
@@ -37,10 +37,7 @@ export const detectPlatform = (): PlatformType | undefined => {
  * @param config - Platform configuration options
  * @returns Resolved platform or undefined for desktop
  */
-export const resolvePlatform = (config?: {
-    platform?: PlatformType | 'auto';
-    detectPlatform?: () => PlatformType | undefined;
-}): PlatformType | undefined => {
+export const resolvePlatform = (config?: PageTransitionConfig): PlatformType | undefined => {
     // Custom detector takes priority
     if (config?.detectPlatform) {
         return config.detectPlatform();

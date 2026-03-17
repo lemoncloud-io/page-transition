@@ -9,6 +9,16 @@ iOS/Android style page transitions for React using the [View Transitions API](ht
 
 ## Demo
 
+Try the [live example](./examples/basic) or run it locally:
+
+```bash
+# Clone and run the example
+git clone https://github.com/lemoncloud-io/react-page-transition.git
+cd react-page-transition
+pnpm install
+pnpm --filter @example/basic dev
+```
+
 | iOS Style | Android Style |
 |-----------|---------------|
 | Horizontal slide (350ms) | Vertical lift with fade (100ms) |
@@ -542,6 +552,15 @@ src/
     └── setup.ts             # Vitest setup
 ```
 
+### Running the Example
+
+```bash
+# Run the basic example
+pnpm --filter @example/basic dev
+
+# Open http://localhost:3000
+```
+
 ### Testing Locally
 
 To test the package in another project before publishing:
@@ -570,13 +589,20 @@ Contributions are welcome! Please read our contributing guidelines before submit
 
 ### Commit Convention
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+We use [Conventional Commits](https://www.conventionalcommits.org/) with [semantic-release](https://github.com/semantic-release/semantic-release) for automatic versioning:
 
-- `feat:` New features
-- `fix:` Bug fixes
-- `docs:` Documentation changes
-- `chore:` Maintenance tasks
-- `test:` Test changes
+| Commit Type | Version Bump | Example |
+|-------------|--------------|---------|
+| `feat:` | Patch | `feat: add new animation option` |
+| `fix:` | Patch | `fix: resolve flickering issue` |
+| `refactor:` | Patch | `refactor: improve performance` |
+| `chore:` | Patch | `chore: update dependencies` |
+| `feat(minor):` | Minor | `feat(minor): add new hook` |
+| `feat(major):` | Major | `feat(major): restructure API` |
+| `docs:` | No release | `docs: update README` |
+| `test:` | No release | `test: add unit tests` |
+| `ci:` | No release | `ci: update workflow` |
+| `style:` | No release | `style: format code` |
 
 ---
 
