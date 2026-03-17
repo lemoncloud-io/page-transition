@@ -45,6 +45,11 @@
     ],
     "author": "LemonCloud <opensource@lemoncloud.io>",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lemoncloud-io/page-transition.git",
+        "directory": "packages/core"
+    },
     "publishConfig": {
         "access": "public"
     }
