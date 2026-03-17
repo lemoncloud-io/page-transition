@@ -1,27 +1,32 @@
 import { useParams } from 'react-router-dom';
+import { useGoBack } from '@lemoncloud/react-page-transition';
 
-import { Header } from '../components';
+import { usePlatformContext } from '../context';
 
 export const DetailPage = () => {
     const { id } = useParams<{ id: string }>();
+    const { platform } = usePlatformContext();
+    const goBack = useGoBack({ platform });
 
     return (
-        <div className="page">
-            <Header title={`Detail #${id}`} />
+        <div className="detail-page">
+            <header className="detail-header">
+                <button onClick={goBack} className="back-btn">
+                    ← Back
+                </button>
+                <h1>Detail: {id}</h1>
+            </header>
 
-            <div className="content">
+            <main className="detail-content">
                 <div className="detail-card">
-                    <h2>Item {id}</h2>
                     <p>
-                        This is the detail page for item {id}. Navigate back using the
-                        back button to see the reverse transition animation.
+                        You navigated here with: <code>{id}</code>
                     </p>
-                    <p className="hint">
-                        On iOS: Slides back from the left<br />
-                        On Android: Lifts down with fade
+                    <p className="detail-hint">
+                        Press back button to see reverse transition
                     </p>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };

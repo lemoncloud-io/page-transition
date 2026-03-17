@@ -5,286 +5,408 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-        Ubuntu, Cantarell, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-    line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    line-height: 1.5;
 }
 
-.page {
+/* ============================================
+   App Layout
+   ============================================ */
+
+.app {
     min-height: 100vh;
-    background-color: #fff;
-}
-
-/* Header */
-.header {
     display: flex;
-    align-items: center;
-    padding: 16px;
-    background-color: #fff;
-    border-bottom: 1px solid #e0e0e0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    flex-direction: column;
+    padding-bottom: 70px; /* Space for config bar */
 }
 
-.header h1 {
-    font-size: 20px;
+.app-header {
+    background: #fff;
+    padding: 24px 20px 16px;
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.app-header h1 {
+    font-size: 18px;
     font-weight: 600;
-    margin-left: 8px;
+    color: #1d1d1f;
 }
 
-.back-button {
+.app-subtitle {
+    font-size: 13px;
+    color: #86868b;
+    margin-top: 4px;
+}
+
+.app-main {
+    flex: 1;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ============================================
+   Tab Navigation
+   ============================================ */
+
+.tab-nav {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 14px 16px;
     background: none;
     border: none;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #86868b;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.tab-btn:hover {
+    color: #1d1d1f;
+}
+
+.tab-btn.active {
+    color: #007aff;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: #007aff;
+    border-radius: 1px;
+}
+
+/* ============================================
+   Tab Content
+   ============================================ */
+
+.tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tab-header {
+    text-align: center;
+    padding: 8px 0 16px;
+}
+
+.tab-header h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.tab-header p {
+    font-size: 14px;
+    color: #86868b;
+}
+
+/* ============================================
+   Demo Card
+   ============================================ */
+
+.demo-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.demo-card-header {
+    margin-bottom: 12px;
+}
+
+.demo-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.demo-card-desc {
+    font-size: 13px;
+    color: #86868b;
+    margin-top: 2px;
+}
+
+.demo-card-actions {
+    margin-bottom: 12px;
+}
+
+.demo-card-code {
+    background: #1d1d1f;
+    color: #f5f5f7;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ============================================
+   Demo Grid (Platform Tab)
+   ============================================ */
+
+.demo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+/* ============================================
+   Demo Buttons
+   ============================================ */
+
+.demo-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 20px;
+    background: #007aff;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.demo-btn:hover {
+    opacity: 0.9;
+}
+
+.demo-btn.ios {
+    background: #007aff;
+}
+
+.demo-btn.android {
+    background: #34a853;
+}
+
+.demo-btn.primary {
+    background: #007aff;
+}
+
+.demo-btn.secondary {
+    background: #86868b;
+}
+
+.demo-btn-icon {
+    font-size: 18px;
+}
+
+.demo-btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.demo-btn-group .demo-btn {
+    flex: 1;
+}
+
+/* ============================================
+   Animation Grid (Animation Tab)
+   ============================================ */
+
+.animation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.animation-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px;
+    background: #fff;
+    border: 2px solid #e5e5e5;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.animation-card:hover {
+    border-color: #007aff;
+    background: #f0f7ff;
+}
+
+.animation-card:last-child:nth-child(odd) {
+    grid-column: span 2;
+}
+
+.animation-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.animation-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d1d1f;
+}
+
+.animation-desc {
+    font-size: 12px;
+    color: #86868b;
+    margin-top: 2px;
+}
+
+.animation-use {
+    font-size: 11px;
+    color: #007aff;
+    margin-top: 6px;
+}
+
+/* ============================================
+   Code Example
+   ============================================ */
+
+.code-example {
+    margin-top: 8px;
+}
+
+.code-example pre {
+    background: #1d1d1f;
+    color: #f5f5f7;
+    padding: 14px;
+    border-radius: 10px;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+/* ============================================
+   Config Bar (Bottom Fixed)
+   ============================================ */
+
+.config-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.config-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #86868b;
+}
+
+.config-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.config-btn {
+    padding: 8px 16px;
+    background: #f5f5f7;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d1d1f;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.config-btn:hover {
+    background: #e5e5e5;
+}
+
+.config-btn.active {
+    background: #007aff;
+    border-color: #007aff;
+    color: #fff;
+}
+
+/* ============================================
+   Detail Page
+   ============================================ */
+
+.detail-page {
+    min-height: 100vh;
+    background: #fff;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.detail-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 15px;
     color: #007aff;
     cursor: pointer;
     padding: 8px;
     margin-right: 8px;
 }
 
-.back-button:hover {
+.back-btn:hover {
     opacity: 0.7;
 }
 
-/* Content */
-.content {
-    padding: 16px;
+.detail-content {
+    padding: 24px 20px;
 }
 
-/* Platform Info */
-.platform-info {
-    background-color: #f0f0f0;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    text-align: center;
-}
-
-.platform-info p {
-    margin: 4px 0;
-}
-
-/* Platform Switcher */
-.platform-switcher {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-.platform-switcher span {
-    font-weight: 500;
-    color: #666;
-}
-
-.platform-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.platform-btn {
-    padding: 8px 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #fff;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.platform-btn:hover {
-    border-color: #007aff;
-    color: #007aff;
-}
-
-.platform-btn.active {
-    background-color: #007aff;
-    border-color: #007aff;
-    color: white;
-}
-
-/* Navigation Buttons */
-.nav-buttons {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-}
-
-.nav-button {
-    flex: 1;
-    padding: 14px 20px;
-    background-color: #007aff;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.nav-button:hover {
-    background-color: #0056b3;
-}
-
-/* Item List */
-.item-list h2 {
-    margin-bottom: 12px;
-    font-size: 18px;
-}
-
-.item-card {
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.item-card h3 {
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-
-.item-card p {
-    font-size: 14px;
-    color: #666;
-}
-
-/* Settings */
-.settings-section {
-    margin-bottom: 24px;
-}
-
-.settings-section h2 {
-    font-size: 18px;
-    margin-bottom: 12px;
-    color: #666;
-}
-
-.setting-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    margin-bottom: 8px;
-}
-
-.example-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.example-button {
-    padding: 14px 20px;
-    background-color: #007aff;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.example-button.secondary {
-    background-color: #6c757d;
-}
-
-.example-button:hover {
-    opacity: 0.9;
-}
-
-/* Profile */
-.profile-card {
-    text-align: center;
-    padding: 32px;
-    background-color: #f8f9fa;
-    border-radius: 16px;
-    margin-bottom: 24px;
-}
-
-.avatar {
-    width: 80px;
-    height: 80px;
-    background-color: #007aff;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0 auto 16px;
-}
-
-.profile-card h2 {
-    font-size: 22px;
-    margin-bottom: 4px;
-}
-
-.profile-card p {
-    color: #666;
-}
-
-.profile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.action-button {
-    padding: 14px 20px;
-    background-color: #007aff;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.action-button.secondary {
-    background-color: #6c757d;
-}
-
-/* Detail */
 .detail-card {
-    background-color: #f8f9fa;
-    border-radius: 16px;
+    background: #f5f5f7;
     padding: 24px;
+    border-radius: 12px;
+    text-align: center;
 }
 
-.detail-card h2 {
-    font-size: 24px;
-    margin-bottom: 16px;
-}
-
-.detail-card p {
-    margin-bottom: 12px;
-}
-
-.detail-card .hint {
+.detail-card code {
+    display: inline-block;
+    background: #1d1d1f;
+    color: #f5f5f7;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'SF Mono', Menlo, monospace;
     font-size: 14px;
-    color: #666;
-    font-style: italic;
+}
+
+.detail-hint {
+    font-size: 13px;
+    color: #86868b;
+    margin-top: 12px;
 }
