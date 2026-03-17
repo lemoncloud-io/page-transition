@@ -1,0 +1,59 @@
+{
+    "name": "@lemoncloud/vue-page-transition",
+    "version": "0.0.1",
+    "description": "iOS/Android style page transitions for Vue using View Transitions API",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@lemoncloud/page-transition-core": "workspace:*"
+    },
+    "peerDependencies": {
+        "vue": ">=3.0.0",
+        "vue-router": ">=4.0.0"
+    },
+    "devDependencies": {
+        "vue": "^3.5.0",
+        "vue-router": "^4.4.0",
+        "tsup": "^8.3.0",
+        "typescript": "^5.7.0"
+    },
+    "keywords": [
+        "vue",
+        "page-transition",
+        "view-transitions",
+        "animation",
+        "ios",
+        "android",
+        "navigation",
+        "vue-router"
+    ],
+    "author": "LemonCloud <opensource@lemoncloud.io>",
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    }
+}

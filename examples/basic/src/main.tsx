@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 // Import transition CSS - required for animations
-import '@lemoncloud/react-page-transition/styles.css';
+import '@lemoncloud/page-transition-core/styles.css';
 
 import { App } from './App';
 import { PlatformProvider } from './context';

@@ -1,0 +1,51 @@
+{
+    "name": "@lemoncloud/page-transition-core",
+    "version": "0.0.1",
+    "description": "Framework-agnostic page transitions using View Transitions API",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./styles.css": "./dist/styles.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsup && cp src/styles/page-transition.css dist/styles.css",
+        "dev": "tsup --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "devDependencies": {
+        "tsup": "^8.3.0",
+        "typescript": "^5.7.0"
+    },
+    "keywords": [
+        "page-transition",
+        "view-transitions",
+        "animation",
+        "ios",
+        "android",
+        "navigation"
+    ],
+    "author": "LemonCloud <opensource@lemoncloud.io>",
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    }
+}

@@ -1,45 +1,18 @@
 {
-    "name": "@lemoncloud/react-page-transition",
+    "name": "page-transition-monorepo",
     "version": "0.0.1",
-    "description": "iOS/Android style page transitions for React using View Transitions API",
+    "private": true,
+    "description": "iOS/Android style page transitions using View Transitions API - Monorepo",
     "type": "module",
-    "exports": {
-        ".": {
-            "import": {
-                "types": "./dist/index.d.ts",
-                "default": "./dist/index.mjs"
-            },
-            "require": {
-                "types": "./dist/index.d.cts",
-                "default": "./dist/index.cjs"
-            }
-        },
-        "./styles.css": "./dist/styles.css"
-    },
-    "main": "./dist/index.cjs",
-    "module": "./dist/index.mjs",
-    "types": "./dist/index.d.ts",
-    "sideEffects": [
-        "*.css"
-    ],
-    "files": [
-        "dist",
-        "README.md",
-        "LICENSE"
-    ],
     "scripts": {
-        "build": "tsup && cp src/styles/page-transition.css dist/styles.css",
-        "dev": "tsup --watch",
+        "build": "pnpm -r --filter './packages/*' build",
+        "dev": "pnpm -r --parallel --filter './packages/*' dev",
         "test": "vitest",
         "test:run": "vitest run",
         "test:coverage": "vitest --coverage",
-        "lint": "eslint src --ext .ts,.tsx",
-        "typecheck": "tsc --noEmit",
-        "prepublishOnly": "pnpm build"
-    },
-    "peerDependencies": {
-        "react": ">=18.0.0",
-        "react-router-dom": ">=6.0.0"
+        "lint": "eslint packages --ext .ts,.tsx",
+        "typecheck": "pnpm -r --filter './packages/*' typecheck",
+        "clean": "rm -rf packages/*/dist"
     },
     "devDependencies": {
         "@eslint/js": "^9.0.0",
@@ -71,7 +44,6 @@
         "vitest": "^3.0.0"
     },
     "keywords": [
-        "react",
         "page-transition",
         "view-transitions",
         "view-transitions-api",
@@ -88,21 +60,20 @@
         "react-router",
         "navigation",
         "slide",
-        "typescript"
+        "typescript",
+        "react",
+        "vue",
+        "angular"
     ],
     "author": "LemonCloud <opensource@lemoncloud.io>",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/lemoncloud-io/react-page-transition.git"
+        "url": "git+https://github.com/lemoncloud-io/page-transition.git"
     },
-    "homepage": "https://github.com/lemoncloud-io/react-page-transition#readme",
+    "homepage": "https://github.com/lemoncloud-io/page-transition#readme",
     "bugs": {
-        "url": "https://github.com/lemoncloud-io/react-page-transition/issues"
-    },
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org"
+        "url": "https://github.com/lemoncloud-io/page-transition/issues"
     },
     "engines": {
         "node": ">=18.0.0"
