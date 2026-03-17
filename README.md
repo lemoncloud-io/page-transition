@@ -7,9 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 
-**Page transition animations for WebView-based mobile apps using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
-
-> Add mobile-app-like page transition effects to React apps running inside WebView (Capacitor, Ionic, Cordova, etc.).
+**Mobile-app-like page transition animations for React apps using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
 
 | iOS Style | Android Style |
 |:---------:|:-------------:|
@@ -20,21 +18,13 @@
 
 ## What This Library Does
 
-Adds iOS/Android-style page transition animations. Designed for React apps running inside **WebView** (Capacitor, Ionic, Cordova, etc.) to provide a mobile-app-like experience.
+Adds iOS/Android-style page transition animations to React apps. Works in any browser that supports View Transitions API.
 
-- ✅ Page transition animations (slide, lift, fade, zoom)
-- ✅ Platform auto-detection (iOS vs Android style)
-- ✅ Works with React Router's `useNavigate`
-- ❌ **Not a navigation library** — no gesture handling, no screen stack management
-- ❌ **Not a replacement for React Navigation**
-
----
-
-## Features
-
-- iOS-style slide / Android-style lift animations
-- Platform auto-detection or manual override
+- Page transition animations (slide, lift, fade, zoom)
+- Platform auto-detection (iOS vs Android style)
+- Works with React Router's `useNavigate`
 - TypeScript support
+- **Not a navigation library** - no gesture handling, no screen stack management
 
 ---
 
@@ -97,49 +87,23 @@ Done. Page transitions will now animate.
 
 ---
 
-## WebView Platform Detection
+## Platform Detection
 
-When running inside a WebView, you can detect the native platform and apply matching animations.
+Platform is detected automatically from user agent. No configuration needed for most use cases.
 
-### Capacitor / Ionic
+- **iOS devices** - Horizontal slide (350ms)
+- **Android devices** - Vertical lift (100ms)
+- **Desktop** - iOS-style slide (default)
 
-```tsx
-import { Capacitor } from '@capacitor/core';
-import { useNavigateWithTransition } from '@lemoncloud/react-page-transition';
+### Custom Platform Detection
 
-const navigate = useNavigateWithTransition({
-    detectPlatform: () => {
-        const platform = Capacitor.getPlatform();
-        if (platform === 'ios') return 'ios';
-        if (platform === 'android') return 'android';
-        return undefined; // Web fallback
-    }
-});
-```
-
-### React Native WebView
+For WebView apps (Capacitor, React Native, Cordova), you can provide a custom detector:
 
 ```tsx
 const navigate = useNavigateWithTransition({
     detectPlatform: () => {
-        if (window.ReactNativeWebView) {
-            // Injected by React Native
-            return window.isAndroid ? 'android' : 'ios';
-        }
-        return undefined;
-    }
-});
-```
-
-### Cordova
-
-```tsx
-const navigate = useNavigateWithTransition({
-    detectPlatform: () => {
-        if (window.cordova) {
-            return device.platform === 'Android' ? 'android' : 'ios';
-        }
-        return undefined;
+        // Return 'ios' | 'android' | undefined
+        return yourPlatformDetectionLogic();
     }
 });
 ```
@@ -169,7 +133,7 @@ A wrapper around React Router's `useNavigate` that adds view transition support.
 | `replace` | `boolean` | `false` | Replace history (disables transition by default) |
 | `state` | `any` | - | Router state |
 
-> **Note:** `replace: true` disables transitions by default — ideal for tab bars. Override with `transition: true`.
+> **Note:** `replace: true` disables transitions by default - ideal for tab bars. Override with `transition: true`.
 
 #### Return Value
 
@@ -217,7 +181,7 @@ import { useGoBack } from '@lemoncloud/react-page-transition';
 
 const Header = () => {
     const goBack = useGoBack();
-    return <button onClick={goBack}>← Back</button>;
+    return <button onClick={goBack}>Back</button>;
 };
 ```
 
