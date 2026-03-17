@@ -8,7 +8,7 @@ import type { PageTransitionConfig } from '../types';
  * Convenience hook for back navigation with transition.
  *
  * @param config - Optional configuration for platform-specific animations
- * @returns Callback function to navigate back
+ * @returns Callback function to navigate back (returns Promise)
  *
  * @example
  * ```tsx
@@ -19,12 +19,18 @@ import type { PageTransitionConfig } from '../types';
  *
  * // With custom platform
  * const goBack = useGoBack({ platform: 'ios' });
+ *
+ * // Await transition completion
+ * const handleBack = async () => {
+ *   await goBack();
+ *   console.log('Back transition complete!');
+ * };
  * ```
  */
-export const useGoBack = (config?: PageTransitionConfig): (() => void) => {
+export const useGoBack = (config?: PageTransitionConfig): (() => Promise<void>) => {
     const navigate = useNavigateWithTransition(config);
 
     return useCallback(() => {
-        navigate(-1);
+        return navigate(-1);
     }, [navigate]);
 };

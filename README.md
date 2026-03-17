@@ -277,8 +277,14 @@ A wrapper around React Router's `useNavigate` that adds view transition support.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `transition` | `boolean` | `true` (or `false` if `replace: true`) | Enable/disable transition animation |
+| `direction` | `'forward' \| 'back'` | auto | Animation direction (back animation for path navigation) |
+| `animation` | `'slide' \| 'lift' \| 'fade' \| 'zoom' \| 'none'` | platform-based | Animation type (overrides platform default) |
 | `replace` | `boolean` | `false` | Replace current history entry (disables transition by default) |
 | `state` | `any` | - | State to pass to the new location |
+
+#### Return Value
+
+Returns a `Promise<void>` that resolves when the transition animation completes.
 
 > **Note:** When `replace: true` is set, transitions are automatically disabled. This is ideal for tab bar navigation where you want instant switches. Use `transition: true` explicitly to override this behavior.
 
@@ -304,10 +310,27 @@ const navigate = useNavigateWithTransition({
 // Usage
 navigate('/path');                                        // Forward with transition
 navigate(-1);                                             // Back with transition
+navigate('/home', { direction: 'back' });                 // Path with back animation
 navigate('/path', { transition: false });                 // No transition
 navigate('/path', { replace: true });                     // Replace history (no transition)
 navigate('/path', { replace: true, transition: true });   // Replace with transition
 navigate('/path', { state: { from: '/' } });              // With state
+
+// Animation types
+navigate('/modal', { animation: 'fade' });                // Crossfade (good for modals)
+navigate('/gallery/1', { animation: 'zoom' });            // Scale with fade (galleries)
+navigate('/page', { animation: 'slide' });                // Force iOS-style slide
+navigate('/page', { animation: 'lift' });                 // Force Android-style lift
+navigate('/reset', { animation: 'none' });                // Instant, no animation
+
+// Await transition completion
+await navigate('/settings');
+console.log('Transition complete!');
+
+// Chain with other actions
+navigate('/checkout').then(() => {
+    analytics.track('checkout_viewed');
+});
 ```
 
 ### `useGoBack(config?)`
@@ -348,9 +371,13 @@ if (platform === 'android') {
 ```tsx
 import type {
     PlatformType,              // 'ios' | 'android'
+    NavigationDirection,       // 'forward' | 'back'
+    AnimationType,             // 'slide' | 'lift' | 'fade' | 'zoom' | 'none'
     PageTransitionConfig,      // { platform?, detectPlatform? }
-    TransitionNavigateOptions, // NavigateOptions & { transition? }
-    NavigateWithTransitionFn,  // (to, options?) => void
+    TransitionNavigateOptions, // NavigateOptions & { transition?, direction?, animation? }
+    NavigateWithTransitionFn,  // (to, options?) => Promise<void>
+    ViewTransition,            // View Transitions API type
+    ViewTransitionCallback,    // Callback for startViewTransition
 } from '@lemoncloud/react-page-transition';
 ```
 
@@ -358,7 +385,7 @@ import type {
 
 ## Animation Styles
 
-### iOS (Default for desktop & iOS devices)
+### Slide (iOS default)
 
 | Direction | Animation | Duration |
 |-----------|-----------|----------|
@@ -367,7 +394,7 @@ import type {
 
 Easing: `cubic-bezier(0.32, 0.72, 0, 1)` (iOS native curve)
 
-### Android
+### Lift (Android default)
 
 | Direction | Animation | Duration |
 |-----------|-----------|----------|
@@ -375,6 +402,27 @@ Easing: `cubic-bezier(0.32, 0.72, 0, 1)` (iOS native curve)
 | ← Back | Old page lifts down with fade out | 100ms |
 
 Easing: `ease-out`
+
+### Fade
+
+Simple crossfade animation. Good for modals, auth flows, overlays.
+
+| Direction | Animation | Duration |
+|-----------|-----------|----------|
+| Forward/Back | Crossfade | 200ms |
+
+### Zoom
+
+Scale with fade animation. Good for image galleries, detail views.
+
+| Direction | Animation | Duration |
+|-----------|-----------|----------|
+| Forward → | Scale up from 0.9 with fade in | 250ms |
+| ← Back | Scale down to 0.9 with fade out | 250ms |
+
+### None
+
+Instant switch with no animation. Good for deep links, resets.
 
 ---
 
@@ -482,13 +530,16 @@ html {
 
 ### Wrong animation direction
 
-Make sure you're using `navigate(-1)` for back navigation, not `navigate('/')`:
+Use `navigate(-1)` or the `direction` option for back navigation:
 
 ```tsx
 // ✅ Correct - triggers back animation
 navigate(-1);
 
-// ❌ Wrong - triggers forward animation
+// ✅ Also correct - path with back animation
+navigate('/home', { direction: 'back' });
+
+// ❌ Wrong - triggers forward animation (unless direction specified)
 navigate('/');
 ```
 

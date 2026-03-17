@@ -163,6 +163,198 @@
 }
 
 /* ============================================
+   Fade Animation (Crossfade)
+   Good for: modals, auth flows, overlays
+   ============================================ */
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+.animation-fade::view-transition-old(root) {
+    animation-name: fade-out;
+    animation-duration: 200ms;
+    animation-timing-function: ease-out;
+    z-index: 1;
+}
+
+.animation-fade::view-transition-new(root) {
+    animation-name: fade-in;
+    animation-duration: 200ms;
+    animation-timing-function: ease-in;
+    z-index: 2;
+}
+
+/* Fade back navigation (same as forward - symmetric) */
+.animation-fade.back-navigation::view-transition-old(root) {
+    animation-name: fade-out;
+    z-index: 2;
+}
+
+.animation-fade.back-navigation::view-transition-new(root) {
+    animation-name: fade-in;
+    z-index: 1;
+}
+
+/* ============================================
+   Zoom Animation (Scale + Fade)
+   Good for: image galleries, detail views
+   ============================================ */
+
+@keyframes zoom-in {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes zoom-out {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1.1);
+        opacity: 0;
+    }
+}
+
+@keyframes zoom-in-reverse {
+    from {
+        transform: scale(1.1);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes zoom-out-reverse {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+.animation-zoom::view-transition-old(root) {
+    animation-name: zoom-out;
+    animation-duration: 250ms;
+    animation-timing-function: ease-out;
+    z-index: 1;
+}
+
+.animation-zoom::view-transition-new(root) {
+    animation-name: zoom-in;
+    animation-duration: 250ms;
+    animation-timing-function: ease-out;
+    z-index: 2;
+}
+
+/* Zoom back navigation (reverse direction) */
+.animation-zoom.back-navigation::view-transition-old(root) {
+    animation-name: zoom-out-reverse;
+    z-index: 2;
+}
+
+.animation-zoom.back-navigation::view-transition-new(root) {
+    animation-name: zoom-in-reverse;
+    z-index: 1;
+}
+
+/* ============================================
+   Explicit Slide Animation
+   (Same as default iOS, but can be forced on Android)
+   ============================================ */
+
+.animation-slide::view-transition-old(root) {
+    animation-name: slide-out-to-left;
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 1;
+}
+
+.animation-slide::view-transition-new(root) {
+    animation-name: slide-in-from-right;
+    animation-duration: 350ms;
+    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    z-index: 2;
+}
+
+.animation-slide.back-navigation::view-transition-old(root) {
+    animation-name: slide-out-to-right;
+    z-index: 2;
+}
+
+.animation-slide.back-navigation::view-transition-new(root) {
+    animation-name: slide-in-from-left;
+    z-index: 1;
+}
+
+/* ============================================
+   Explicit Lift Animation
+   (Same as Android, but can be forced on iOS)
+   ============================================ */
+
+.animation-lift::view-transition-old(root) {
+    animation-name: lift-up-leave;
+    animation-duration: 100ms;
+    animation-timing-function: ease-out;
+    z-index: 1;
+}
+
+.animation-lift::view-transition-new(root) {
+    animation-name: lift-up-enter;
+    animation-duration: 100ms;
+    animation-timing-function: ease-out;
+    z-index: 2;
+}
+
+.animation-lift.back-navigation::view-transition-old(root) {
+    animation-name: lift-down-leave;
+    z-index: 2;
+}
+
+.animation-lift.back-navigation::view-transition-new(root) {
+    animation-name: lift-down-enter;
+    z-index: 1;
+}
+
+/* ============================================
+   No Animation (Instant)
+   Note: Handled in JS by skipping startViewTransition
+   This is a fallback in case the class is applied
+   ============================================ */
+
+.animation-none::view-transition-old(root),
+.animation-none::view-transition-new(root) {
+    animation: none !important;
+    animation-duration: 0ms !important;
+}
+
+/* ============================================
    Accessibility
    ============================================ */
 
