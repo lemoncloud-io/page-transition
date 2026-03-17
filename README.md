@@ -1,7 +1,7 @@
 # @lemoncloud/react-page-transition
 
 [![npm version](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition)
-[![CI](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/ci.yml/badge.svg)](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/ci.yml)
+[![Release](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/release.yml/badge.svg)](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/release.yml)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/react-page-transition)](https://bundlephobia.com/package/@lemoncloud/react-page-transition)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -11,7 +11,7 @@
 
 | iOS Style | Android Style |
 |:---------:|:-------------:|
-| ![iOS](.github/ios.gif) | ![Android](.github/android.gif) |
+| ![iOS](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/android.gif) |
 | Horizontal slide (350ms) | Vertical lift (100ms) |
 
 ---
