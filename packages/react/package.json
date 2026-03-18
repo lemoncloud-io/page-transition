@@ -1,6 +1,6 @@
 {
     "name": "@lemoncloud/react-page-transition",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "iOS/Android style page transitions for React using View Transitions API",
     "type": "module",
     "exports": {

@@ -1,33 +1,35 @@
 # Page Transition
 
-[![npm version](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition)
+[![CI](https://github.com/lemoncloud-io/page-transition/actions/workflows/ci.yml/badge.svg)](https://github.com/lemoncloud-io/page-transition/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-**Mobile-app-like page transition animations using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
-
-Supports **React**, **Vue**, and **Angular**.
+**iOS/Android-style page transitions using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
 
 | iOS Style | Android Style |
 |:---------:|:-------------:|
-| ![iOS](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/android.gif) |
+| ![iOS](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/android.gif) |
 | Horizontal slide (350ms) | Vertical lift (100ms) |
 
----
+## Features
+
+- iOS/Android platform auto-detection
+- Multiple animation types (slide, lift, fade, zoom)
+- Promise-based navigation
+- SSR safe
+- Zero dependencies (except framework peer deps)
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| [`@lemoncloud/page-transition-core`](./packages/core) | Framework-agnostic core + CSS |
-| [`@lemoncloud/react-page-transition`](./packages/react) | React hooks |
-| [`@lemoncloud/vue-page-transition`](./packages/vue) | Vue composables |
+| Package | Version | Size | Description |
+|---------|---------|------|-------------|
+| [@lemoncloud/react-page-transition](./packages/react) | [![npm](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/react-page-transition)](https://bundlephobia.com/package/@lemoncloud/react-page-transition) | React hooks |
+| [@lemoncloud/vue-page-transition](./packages/vue) | [![npm](https://img.shields.io/npm/v/@lemoncloud/vue-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/vue-page-transition) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/vue-page-transition)](https://bundlephobia.com/package/@lemoncloud/vue-page-transition) | Vue composables |
+| [@lemoncloud/page-transition-core](./packages/core) | [![npm](https://img.shields.io/npm/v/@lemoncloud/page-transition-core.svg)](https://www.npmjs.com/package/@lemoncloud/page-transition-core) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/page-transition-core)](https://bundlephobia.com/package/@lemoncloud/page-transition-core) | Core + CSS |
 
-> **Angular:** Uses built-in `withViewTransitions()`. Only needs CSS from core package (no wrapper package).
+> **Angular 17+:** Uses built-in `withViewTransitions()`. Only needs CSS from core package.
 
----
-
-## Installation
+## Quick Start
 
 ### React
 
@@ -42,10 +44,16 @@ import '@lemoncloud/react-page-transition/styles.css';
 // Component
 import { useNavigateWithTransition } from '@lemoncloud/react-page-transition';
 
-const MyComponent = () => {
+function MyComponent() {
     const navigate = useNavigateWithTransition();
-    return <button onClick={() => navigate('/settings')}>Settings</button>;
-};
+
+    return (
+        <>
+            <button onClick={() => navigate('/settings')}>Settings</button>
+            <button onClick={() => navigate(-1)}>Back</button>
+        </>
+    );
+}
 ```
 
 ### Vue
@@ -54,26 +62,27 @@ const MyComponent = () => {
 npm install @lemoncloud/vue-page-transition
 ```
 
-```ts
-// main.ts
+```vue
+<script setup lang="ts">
 import '@lemoncloud/page-transition-core/styles.css';
-
-// Component
 import { useNavigateWithTransition } from '@lemoncloud/vue-page-transition';
 
 const { navigate, goBack } = useNavigateWithTransition();
-navigate('/settings');
+</script>
+
+<template>
+    <button @click="navigate('/settings')">Settings</button>
+    <button @click="goBack()">Back</button>
+</template>
 ```
 
 ### Angular
-
-Angular 17+ has built-in View Transitions support. Just import the CSS:
 
 ```bash
 npm install @lemoncloud/page-transition-core
 ```
 
-```ts
+```typescript
 // main.ts
 import { provideRouter, withViewTransitions } from '@angular/router';
 
@@ -82,71 +91,50 @@ bootstrapApplication(AppComponent, {
 });
 ```
 
-```css
-/* angular.json - add to styles array */
+```json
+// angular.json - add to styles array
 "styles": [
     "node_modules/@lemoncloud/page-transition-core/dist/styles.css",
     "src/styles.css"
 ]
 ```
 
-For back navigation animation, add `back-navigation` class:
+## API
 
 ```ts
-// In your component
-goBack() {
-    document.documentElement.classList.add('back-navigation');
-    this.location.back();
-}
+const navigate = useNavigateWithTransition({
+    platform?: 'ios' | 'android' | 'auto',  // default: 'auto'
+    detectPlatform?: () => 'ios' | 'android' | undefined
+});
+
+// Navigation
+navigate('/path');                          // Forward
+navigate(-1);                               // Back
+navigate('/home', { direction: 'back' });   // Path with back animation
+navigate('/modal', { animation: 'fade' });  // Custom animation
+navigate('/tab', { replace: true });        // No transition (tab switch)
 ```
 
----
+### Animation Types
+
+| Type | Duration | Use Case |
+|------|----------|----------|
+| `slide` | 350ms | iOS default - horizontal |
+| `lift` | 100ms | Android default - vertical |
+| `fade` | 200ms | Modals, overlays |
+| `zoom` | 250ms | Galleries, images |
+| `none` | 0ms | Instant switch |
 
 ## Browser Support
 
-Chrome 111+, Edge 111+, Safari 18+, Firefox 133+
+| Browser | Version |
+|---------|---------|
+| Chrome | 111+ |
+| Edge | 111+ |
+| Safari | 18+ |
+| Firefox | 133+ |
 
-Unsupported browsers fall back to instant navigation.
-
----
-
-## API Reference
-
-### React / Vue
-
-```ts
-const navigate = useNavigateWithTransition(config?);
-
-// Config options
-{
-    platform?: 'ios' | 'android' | 'auto',  // Animation style (default: 'auto')
-    detectPlatform?: () => 'ios' | 'android' | undefined  // Custom detector
-}
-
-// Navigate options
-navigate('/path', {
-    transition?: boolean,      // Enable/disable animation (default: true)
-    direction?: 'forward' | 'back',  // Override direction
-    animation?: 'slide' | 'lift' | 'fade' | 'zoom' | 'none',  // Animation type
-    replace?: boolean,         // Replace history (disables transition by default)
-});
-
-// Back navigation
-navigate(-1);  // or useGoBack() hook
-```
-
----
-
-## Animation Styles
-
-| Style | Duration | Use Case |
-|-------|----------|----------|
-| `slide` | 350ms | iOS default |
-| `lift` | 100ms | Android default |
-| `fade` | 200ms | Modals |
-| `zoom` | 250ms | Galleries |
-
----
+Unsupported browsers fall back to instant navigation (no animation).
 
 ## Development
 
@@ -154,18 +142,24 @@ navigate(-1);  // or useGoBack() hook
 pnpm install
 pnpm build        # Build all packages
 pnpm dev          # Watch mode
-pnpm test         # Run tests
+pnpm test         # Run tests (42 tests)
 ```
 
-### Run Examples
+### Examples
 
 ```bash
-pnpm --filter @example/basic dev    # React (localhost:3000)
-pnpm --filter @example/vue dev      # Vue (localhost:3001)
-pnpm --filter @example/angular dev  # Angular (localhost:4200)
+pnpm --filter @example/basic dev    # React - localhost:3000
+pnpm --filter @example/vue dev      # Vue - localhost:3001
+pnpm --filter @example/angular dev  # Angular - localhost:4200
 ```
 
----
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'feat: add amazing feature'`)
+4. Push (`git push origin feature/amazing`)
+5. Open Pull Request
 
 ## License
 

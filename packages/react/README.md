@@ -1,6 +1,10 @@
 # @lemoncloud/react-page-transition
 
-iOS/Android style page transitions for React using the View Transitions API.
+[![npm](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition)
+[![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/react-page-transition)](https://bundlephobia.com/package/@lemoncloud/react-page-transition)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+iOS/Android-style page transitions for React using the View Transitions API.
 
 ## Installation
 
@@ -13,13 +17,13 @@ npm install @lemoncloud/react-page-transition
 ## Quick Start
 
 ```tsx
-// main.tsx
+// 1. Import CSS (once in main.tsx)
 import '@lemoncloud/react-page-transition/styles.css';
 
-// Component
+// 2. Use the hook
 import { useNavigateWithTransition } from '@lemoncloud/react-page-transition';
 
-const MyComponent = () => {
+function MyComponent() {
     const navigate = useNavigateWithTransition();
 
     return (
@@ -28,7 +32,7 @@ const MyComponent = () => {
             <button onClick={() => navigate(-1)}>Back</button>
         </>
     );
-};
+}
 ```
 
 ## API
@@ -37,33 +41,72 @@ const MyComponent = () => {
 
 ```ts
 const navigate = useNavigateWithTransition({
-    platform: 'auto',  // 'ios' | 'android' | 'auto'
-    detectPlatform: () => 'ios' | 'android' | undefined,  // Custom detector
+    platform: 'auto',      // 'ios' | 'android' | 'auto'
+    detectPlatform: () => 'ios' | 'android' | undefined
 });
-
-// Usage
-navigate('/path');
-navigate('/path', { animation: 'fade' });
-navigate(-1);  // Back with animation
 ```
 
-### Navigate Options
+### Navigation Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `transition` | `boolean` | `true` | Enable animation |
-| `direction` | `'forward' \| 'back'` | auto | Animation direction |
-| `animation` | `'slide' \| 'lift' \| 'fade' \| 'zoom' \| 'none'` | platform | Animation type |
-| `replace` | `boolean` | `false` | Replace history |
+```ts
+navigate('/path', {
+    transition: true,       // Enable animation (default: true)
+    direction: 'forward',   // 'forward' | 'back'
+    animation: 'slide',     // 'slide' | 'lift' | 'fade' | 'zoom' | 'none'
+    replace: false          // Replace history (disables transition by default)
+});
+```
+
+### Examples
+
+```tsx
+// Forward navigation
+navigate('/settings');
+
+// Back navigation
+navigate(-1);
+
+// Path with back animation
+navigate('/home', { direction: 'back' });
+
+// Modal with fade
+navigate('/modal', { animation: 'fade' });
+
+// Tab switch (no animation)
+navigate('/tab', { replace: true });
+
+// Await transition completion
+await navigate('/page');
+console.log('Transition complete!');
+```
 
 ### `useGoBack(config?)`
 
-```ts
+Convenience hook for back navigation.
+
+```tsx
 import { useGoBack } from '@lemoncloud/react-page-transition';
 
-const goBack = useGoBack();
-<button onClick={goBack}>Back</button>
+function Header() {
+    const goBack = useGoBack();
+    return <button onClick={goBack}>← Back</button>;
+}
 ```
+
+## Animation Types
+
+| Type | Duration | Use Case |
+|------|----------|----------|
+| `slide` | 350ms | iOS default |
+| `lift` | 100ms | Android default |
+| `fade` | 200ms | Modals |
+| `zoom` | 250ms | Galleries |
+
+## Browser Support
+
+Chrome 111+, Edge 111+, Safari 18+, Firefox 133+
+
+Unsupported browsers fall back to instant navigation.
 
 ## License
 
