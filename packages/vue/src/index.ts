@@ -1,25 +1,10 @@
 // Composables
 export { useNavigateWithTransition } from './useNavigateWithTransition';
 
-// Re-export core utilities
+// Re-export core utilities (public API only)
 export {
-    executePageTransition,
     detectPlatform,
-    resolvePlatform,
     isViewTransitionSupported,
-    resolveTransitionClasses,
-    cleanupTransitionClasses,
-} from '@lemoncloud/page-transition-core';
-
-// Re-export constants
-export {
-    BACK_NAVIGATION_CLASS,
-    ANDROID_PLATFORM_CLASS,
-    ANIMATION_FADE_CLASS,
-    ANIMATION_ZOOM_CLASS,
-    ANIMATION_NONE_CLASS,
-    ANIMATION_LIFT_CLASS,
-    ANIMATION_SLIDE_CLASS,
 } from '@lemoncloud/page-transition-core';
 
 // Types

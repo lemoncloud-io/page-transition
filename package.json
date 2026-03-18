@@ -10,7 +10,7 @@
         "test": "vitest",
         "test:run": "vitest run",
         "test:coverage": "vitest --coverage",
-        "lint": "eslint packages --ext .ts,.tsx",
+        "lint": "eslint packages/*/src",
         "typecheck": "pnpm -r --filter './packages/*' typecheck",
         "clean": "rm -rf packages/*/dist",
         "changeset": "changeset",

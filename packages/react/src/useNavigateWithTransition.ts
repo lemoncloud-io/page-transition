@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { executePageTransition, isViewTransitionSupported } from '@lemoncloud/page-transition-core';
@@ -60,13 +60,6 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
 export const useNavigateWithTransition = (config?: PageTransitionConfig): NavigateWithTransitionFn => {
     const navigate = useNavigate();
 
-    // Memoize config to prevent unnecessary re-renders when config is passed inline
-    const stableConfig = useMemo(
-        () => config,
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [config?.platform, config?.detectPlatform]
-    );
-
     const navigateWithTransition = useCallback(
         (to: To | number, options?: TransitionNavigateOptions): Promise<void> => {
             const { transition, direction, animation, ...navigateOptions } = options ?? {};
@@ -106,11 +99,13 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 {
                     animation,
                     direction: resolvedDirection,
-                    config: stableConfig,
+                    config,
                 }
             );
         },
-        [navigate, stableConfig]
+        // Config values (platform, detectPlatform) are stable - only navigate reference matters
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [navigate, config?.platform, config?.detectPlatform]
     );
 
     return navigateWithTransition;

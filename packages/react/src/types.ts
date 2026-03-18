@@ -1,9 +1,6 @@
 import type { NavigateOptions, To } from 'react-router-dom';
 
-import type { AnimationType, NavigationDirection, PageTransitionConfig } from '@lemoncloud/page-transition-core';
-
-// Re-export core types for convenience
-export type { PlatformType, NavigationDirection, AnimationType, PageTransitionConfig } from '@lemoncloud/page-transition-core';
+import type { AnimationType, NavigationDirection } from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
 export interface TransitionNavigateOptions extends NavigateOptions {

@@ -1,9 +1,6 @@
 import type { RouteLocationRaw } from 'vue-router';
 
-import type { AnimationType, NavigationDirection, PageTransitionConfig } from '@lemoncloud/page-transition-core';
-
-// Re-export core types for convenience
-export type { PlatformType, NavigationDirection, AnimationType, PageTransitionConfig } from '@lemoncloud/page-transition-core';
+import type { AnimationType, NavigationDirection } from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
 export interface TransitionNavigateOptions {

@@ -4,9 +4,12 @@ import tsParser from '@typescript-eslint/parser';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
+    {
+        ignores: ['**/dist/**', '**/node_modules/**', 'coverage/', '*.config.*', 'examples/**'],
+    },
     js.configs.recommended,
     {
-        files: ['src/**/*.ts', 'src/**/*.tsx'],
+        files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.tsx', 'packages/*/test/**/*.ts', 'packages/*/test/**/*.tsx'],
         languageOptions: {
             parser: tsParser,
             parserOptions: {
@@ -37,8 +40,5 @@ export default [
             'react-hooks/exhaustive-deps': 'warn',
             'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
-    },
-    {
-        ignores: ['dist/', 'node_modules/', 'coverage/', '*.config.*'],
     },
 ];
