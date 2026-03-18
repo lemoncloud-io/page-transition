@@ -21,7 +21,6 @@ jobs:
             - uses: actions/checkout@v4
               with:
                   fetch-depth: 0
-                  persist-credentials: false
 
             - uses: pnpm/action-setup@v4
 
@@ -32,13 +31,19 @@ jobs:
                   registry-url: 'https://registry.npmjs.org'
 
             - run: pnpm install --frozen-lockfile
+            - run: pnpm build
             - run: pnpm typecheck
             - run: pnpm lint
             - run: pnpm test:run
-            - run: pnpm build
 
-            - name: Release
+            - name: Create Release PR or Publish
+              id: changesets
+              uses: changesets/action@v1
+              with:
+                  version: pnpm version
+                  publish: pnpm release
+                  title: 'chore: version packages'
+                  commit: 'chore: version packages'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: pnpm dlx semantic-release

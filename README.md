@@ -1,77 +1,48 @@
-# @lemoncloud/react-page-transition
+# Page Transition
 
-[![npm version](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition)
-[![Release](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/release.yml/badge.svg)](https://github.com/lemoncloud-io/react-page-transition/actions/workflows/release.yml)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/react-page-transition)](https://bundlephobia.com/package/@lemoncloud/react-page-transition)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 
-**Mobile-app-like page transition animations for React apps using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
+**iOS/Android-style page transitions using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
+Built for hybrid mobile apps that need native-feeling navigation in WebView.
 
 | iOS Style | Android Style |
 |:---------:|:-------------:|
-| ![iOS](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/react-page-transition/main/.github/android.gif) |
+| ![iOS](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/android.gif) |
 | Horizontal slide (350ms) | Vertical lift (100ms) |
 
----
+## Features
 
-## What This Library Does
+- iOS/Android platform auto-detection
+- Multiple animation types (slide, lift, fade, zoom)
+- Promise-based navigation
+- SSR safe
+- Zero dependencies (except framework peer deps)
 
-Adds iOS/Android-style page transition animations to React apps. Works in any browser that supports View Transitions API.
+## Packages
 
-- Page transition animations (slide, lift, fade, zoom)
-- Platform auto-detection (iOS vs Android style)
-- Works with React Router's `useNavigate`
-- TypeScript support
-- **Not a navigation library** - no gesture handling, no screen stack management
+| Package | Version | Size | Description |
+|---------|---------|------|-------------|
+| [@lemoncloud/react-page-transition](./packages/react) | [![npm](https://img.shields.io/npm/v/@lemoncloud/react-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/react-page-transition) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/react-page-transition)](https://bundlephobia.com/package/@lemoncloud/react-page-transition) | React hooks |
+| [@lemoncloud/vue-page-transition](./packages/vue) | [![npm](https://img.shields.io/npm/v/@lemoncloud/vue-page-transition.svg)](https://www.npmjs.com/package/@lemoncloud/vue-page-transition) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/vue-page-transition)](https://bundlephobia.com/package/@lemoncloud/vue-page-transition) | Vue composables |
+| [@lemoncloud/page-transition-core](./packages/core) | [![npm](https://img.shields.io/npm/v/@lemoncloud/page-transition-core.svg)](https://www.npmjs.com/package/@lemoncloud/page-transition-core) | [![size](https://img.shields.io/bundlephobia/minzip/@lemoncloud/page-transition-core)](https://bundlephobia.com/package/@lemoncloud/page-transition-core) | Core + CSS |
 
----
-
-## How It Works
-
-Uses the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API) to animate page changes.
-
-**Browser Support:** Chrome 111+, Edge 111+, Safari 18+, Firefox 133+
-
-Unsupported browsers fall back to instant navigation.
-
----
-
-## Installation
-
-```bash
-npm install @lemoncloud/react-page-transition
-# or
-pnpm add @lemoncloud/react-page-transition
-# or
-yarn add @lemoncloud/react-page-transition
-```
-
-### Peer Dependencies
-
-| Package | Version |
-|---------|---------|
-| react | >= 18.0.0 |
-| react-router-dom | >= 6.0.0 |
-
----
+> **Angular 17+:** Uses built-in `withViewTransitions()`. Only needs CSS from core package.
 
 ## Quick Start
 
-### 1. Import CSS
+### React
+
+```bash
+npm install @lemoncloud/react-page-transition
+```
 
 ```tsx
 // main.tsx
-import '@lemoncloud/react-page-transition/styles.css';
-```
-
-### 2. Replace useNavigate
-
-```tsx
+import '@lemoncloud/page-transition-core/styles.css';
 import { useNavigateWithTransition } from '@lemoncloud/react-page-transition';
 
-const MyComponent = () => {
+function MyComponent() {
     const navigate = useNavigateWithTransition();
 
     return (
@@ -80,175 +51,105 @@ const MyComponent = () => {
             <button onClick={() => navigate(-1)}>Back</button>
         </>
     );
-};
+}
 ```
 
-Done. Page transitions will now animate.
+### Vue
 
----
+```bash
+npm install @lemoncloud/vue-page-transition
+```
 
-## Platform Detection
+```vue
+<script setup lang="ts">
+import '@lemoncloud/page-transition-core/styles.css';
+import { useNavigateWithTransition } from '@lemoncloud/vue-page-transition';
 
-Platform is detected automatically from user agent. No configuration needed for most use cases.
+const { navigate, goBack } = useNavigateWithTransition();
+</script>
 
-- **iOS devices** - Horizontal slide (350ms)
-- **Android devices** - Vertical lift (100ms)
-- **Desktop** - iOS-style slide (default)
+<template>
+    <button @click="navigate('/settings')">Settings</button>
+    <button @click="goBack()">Back</button>
+</template>
+```
 
-### Custom Platform Detection
+### Angular
 
-For WebView apps (Capacitor, React Native, Cordova), you can provide a custom detector:
+```bash
+npm install @lemoncloud/page-transition-core
+```
 
-```tsx
-const navigate = useNavigateWithTransition({
-    detectPlatform: () => {
-        // Return 'ios' | 'android' | undefined
-        return yourPlatformDetectionLogic();
-    }
+```typescript
+// main.ts
+import { provideRouter, withViewTransitions } from '@angular/router';
+
+bootstrapApplication(AppComponent, {
+    providers: [provideRouter(routes, withViewTransitions())]
 });
 ```
 
----
-
-## API Reference
-
-### `useNavigateWithTransition(config?)`
-
-A wrapper around React Router's `useNavigate` that adds view transition support.
-
-#### Config Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `platform` | `'ios' \| 'android' \| 'auto'` | `'auto'` | Animation style |
-| `detectPlatform` | `() => 'ios' \| 'android' \| undefined` | - | Custom platform detector |
-
-#### Navigate Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `transition` | `boolean` | `true` | Enable/disable animation |
-| `direction` | `'forward' \| 'back'` | auto | Override animation direction |
-| `animation` | `'slide' \| 'lift' \| 'fade' \| 'zoom' \| 'none'` | platform-based | Animation type |
-| `replace` | `boolean` | `false` | Replace history (disables transition by default) |
-| `state` | `any` | - | Router state |
-
-> **Note:** `replace: true` disables transitions by default - ideal for tab bars. Override with `transition: true`.
-
-#### Return Value
-
-Returns `Promise<void>` that resolves when the transition animation completes.
-
-```tsx
-await navigate('/settings');
-console.log('Transition complete!');
+```json
+// angular.json - add to styles array
+"styles": [
+    "node_modules/@lemoncloud/page-transition-core/dist/styles.css",
+    "src/styles.css"
+]
 ```
 
-#### Examples
+## API
 
-```tsx
-const navigate = useNavigateWithTransition();
+```ts
+const navigate = useNavigateWithTransition({
+    platform?: 'ios' | 'android' | 'auto',  // default: 'auto'
+    detectPlatform?: () => 'ios' | 'android' | undefined
+});
 
-// Basic navigation
-navigate('/settings');              // Forward with animation
-navigate(-1);                       // Back with animation
-
-// Control transitions
-navigate('/tabs/home', { replace: true });                  // Tab switch, no animation
-navigate('/tabs/home', { replace: true, transition: true }); // Tab switch with animation
-navigate('/reset', { transition: false });                  // Force no animation
-
-// Animation types
-navigate('/modal', { animation: 'fade' });    // Crossfade (good for modals)
-navigate('/gallery', { animation: 'zoom' });  // Scale with fade (good for galleries)
-navigate('/page', { animation: 'slide' });    // Force iOS-style slide
-navigate('/page', { animation: 'lift' });     // Force Android-style lift
-
-// Direction override (for path-based back navigation)
-navigate('/home', { direction: 'back' });     // Back animation to path
-
-// Platform override
-const navigate = useNavigateWithTransition({ platform: 'ios' });     // Always iOS style
-const navigate = useNavigateWithTransition({ platform: 'android' }); // Always Android style
+// Navigation
+navigate('/path');                          // Forward
+navigate(-1);                               // Back
+navigate('/home', { direction: 'back' });   // Path with back animation
+navigate('/modal', { animation: 'fade' });  // Custom animation
+navigate('/tab', { replace: true });        // No transition (tab switch)
 ```
 
-### `useGoBack(config?)`
+### Animation Types
 
-Convenience hook for back navigation.
+| Type | Duration | Use Case |
+|------|----------|----------|
+| `slide` | 350ms | iOS default - horizontal |
+| `lift` | 100ms | Android default - vertical |
+| `fade` | 200ms | Modals, overlays |
+| `zoom` | 250ms | Galleries, images |
+| `none` | 0ms | Instant switch |
 
-```tsx
-import { useGoBack } from '@lemoncloud/react-page-transition';
+## Browser Support
 
-const Header = () => {
-    const goBack = useGoBack();
-    return <button onClick={goBack}>Back</button>;
-};
-```
+| Browser | Version |
+|---------|---------|
+| Chrome | 111+ |
+| Edge | 111+ |
+| Safari | 18+ |
+| Firefox | 133+ |
 
-### `detectPlatform()`
-
-Utility to detect platform from user agent.
-
-```tsx
-import { detectPlatform } from '@lemoncloud/react-page-transition';
-
-const platform = detectPlatform();
-// Returns: 'ios' | 'android' | undefined (desktop)
-```
-
-### Types
-
-```tsx
-import type {
-    PlatformType,              // 'ios' | 'android'
-    NavigationDirection,       // 'forward' | 'back'
-    AnimationType,             // 'slide' | 'lift' | 'fade' | 'zoom' | 'none'
-    PageTransitionConfig,      // { platform?, detectPlatform? }
-    TransitionNavigateOptions, // NavigateOptions & { transition?, direction?, animation? }
-    NavigateWithTransitionFn,  // (to, options?) => Promise<void>
-} from '@lemoncloud/react-page-transition';
-```
-
----
-
-## Animation Styles
-
-| Style | Duration | Use Case |
-|-------|----------|----------|
-| `slide` | 350ms | iOS default |
-| `lift` | 100ms | Android default |
-| `fade` | 200ms | Modals |
-| `zoom` | 250ms | Galleries |
-
----
-
-## Troubleshooting
-
-**Animations not working?**
-1. Check CSS import: `import '@lemoncloud/react-page-transition/styles.css'`
-2. Check browser support (Chrome 111+, Safari 18+, Edge 111+, Firefox 133+)
-
----
+Unsupported browsers fall back to instant navigation (no animation).
 
 ## Development
 
 ```bash
-git clone https://github.com/lemoncloud-io/react-page-transition.git
-cd react-page-transition
 pnpm install
+pnpm build        # Build all packages
 pnpm dev          # Watch mode
-pnpm test         # Run tests
-pnpm build        # Build library
+pnpm test         # Run tests (42 tests)
 ```
 
-### Run Example
+### Examples
 
 ```bash
-pnpm --filter @example/basic dev
-# Open http://localhost:3000
+pnpm --filter @example/basic dev    # React - localhost:3000
+pnpm --filter @example/vue dev      # Vue - localhost:3001
+pnpm --filter @example/angular dev  # Angular - localhost:4200
 ```
-
----
 
 ## Contributing
 
@@ -258,18 +159,6 @@ pnpm --filter @example/basic dev
 4. Push (`git push origin feature/amazing`)
 5. Open Pull Request
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning.
-
----
-
 ## License
 
 MIT © [LemonCloud](https://lemoncloud.io)
-
----
-
-## Related
-
-- [View Transitions API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
-- [View Transitions API - Chrome Developers](https://developer.chrome.com/docs/web-platform/view-transitions)
-- [React Router](https://reactrouter.com/)

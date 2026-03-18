@@ -18,11 +18,11 @@ jobs:
                   cache: 'pnpm'
 
             - run: pnpm install --frozen-lockfile
+            - run: pnpm build
             - run: pnpm typecheck
             - run: pnpm lint
             - run: pnpm test:run
-            - run: pnpm build
 
             # Package validation
-            - run: pnpm dlx publint
-            - run: pnpm dlx @arethetypeswrong/cli --pack .
+            - name: Validate packages
+              run: pnpm dlx publint packages/*/

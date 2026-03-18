@@ -1,0 +1,68 @@
+{
+    "name": "@lemoncloud/react-page-transition",
+    "version": "0.0.2",
+    "description": "iOS/Android style page transitions for React using View Transitions API",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./styles.css": "./dist/styles.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsup && cp ../core/dist/styles.css dist/styles.css",
+        "dev": "tsup --watch",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@lemoncloud/page-transition-core": "workspace:*"
+    },
+    "peerDependencies": {
+        "react": ">=18.0.0",
+        "react-router-dom": ">=6.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.0",
+        "react": "^18.3.0",
+        "react-router-dom": "^6.28.0",
+        "tsup": "^8.3.0",
+        "typescript": "^5.7.0"
+    },
+    "keywords": [
+        "react",
+        "page-transition",
+        "view-transitions",
+        "animation",
+        "ios",
+        "android",
+        "navigation",
+        "react-router"
+    ],
+    "author": "LemonCloud <opensource@lemoncloud.io>",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/lemoncloud-io/page-transition.git",
+        "directory": "packages/react"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

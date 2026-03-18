@@ -6,18 +6,14 @@
         "moduleResolution": "bundler",
         "strict": true,
         "noUncheckedIndexedAccess": true,
-        "noImplicitOverride": true,
-        "declaration": true,
-        "declarationMap": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "noEmit": true,
-        "jsx": "react-jsx",
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "preserve"
     },
-    "include": ["packages/*/src"],
-    "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+    "include": ["src/**/*.ts", "src/**/*.vue"]
 }
