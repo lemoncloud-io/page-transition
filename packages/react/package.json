@@ -13,18 +13,21 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
-        }
+        },
+        "./styles.css": "./dist/styles.css"
     },
     "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
-    "sideEffects": false,
+    "sideEffects": [
+        "*.css"
+    ],
     "files": [
         "dist",
         "README.md"
     ],
     "scripts": {
-        "build": "tsup",
+        "build": "tsup && cp ../core/dist/styles.css dist/styles.css",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit"
     },

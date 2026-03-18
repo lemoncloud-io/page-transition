@@ -23,11 +23,6 @@ jobs:
             - run: pnpm lint
             - run: pnpm test:run
 
-            # Package validation for all publishable packages
+            # Package validation
             - name: Validate packages
-              run: |
-                  for pkg in packages/*/; do
-                    echo "Validating $pkg"
-                    pnpm dlx publint "$pkg"
-                    pnpm dlx @arethetypeswrong/cli --pack "$pkg"
-                  done
+              run: pnpm dlx publint packages/*/

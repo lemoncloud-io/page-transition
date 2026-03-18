@@ -18,7 +18,7 @@ npm install @lemoncloud/react-page-transition
 
 ```tsx
 // 1. Import CSS (once in main.tsx)
-import '@lemoncloud/react-page-transition/styles.css';
+import '@lemoncloud/page-transition-core/styles.css';
 
 // 2. Use the hook
 import { useNavigateWithTransition } from '@lemoncloud/react-page-transition';
