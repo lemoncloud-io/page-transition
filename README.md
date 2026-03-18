@@ -1,10 +1,10 @@
 # Page Transition
 
-[![CI](https://github.com/lemoncloud-io/page-transition/actions/workflows/ci.yml/badge.svg)](https://github.com/lemoncloud-io/page-transition/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 **iOS/Android-style page transitions using the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API).**
+Built for hybrid mobile apps that need native-feeling navigation in WebView.
 
 | iOS Style | Android Style |
 |:---------:|:-------------:|

@@ -18,10 +18,10 @@ jobs:
                   cache: 'pnpm'
 
             - run: pnpm install --frozen-lockfile
+            - run: pnpm build
             - run: pnpm typecheck
             - run: pnpm lint
             - run: pnpm test:run
-            - run: pnpm build
 
             # Package validation for all publishable packages
             - name: Validate packages
