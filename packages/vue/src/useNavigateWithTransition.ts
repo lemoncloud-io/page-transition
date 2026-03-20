@@ -64,7 +64,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         to: RouteLocationRaw | number,
         options?: TransitionNavigateOptions
     ): Promise<void> => {
-        const { transition, direction, animation, replace } = options ?? {};
+        const { transition, direction, animation, replace, customization } = options ?? {};
 
         // replace: true defaults to no transition (tab bar navigation)
         // explicit transition: true/false overrides this behavior
@@ -104,6 +104,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
                 animation,
                 direction: resolvedDirection,
                 config,
+                customization,
             }
         );
     };

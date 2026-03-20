@@ -3,7 +3,7 @@ import { Routes, Route, Outlet } from 'react-router-dom';
 import { ConfigBar, TabNav } from './components';
 import { usePlatformContext } from './context';
 import { DetailPage } from './pages';
-import { PlatformTab, AnimationTab, OptionsTab } from './tabs';
+import { PlatformTab, AnimationTab, OptionsTab, CustomizeTab } from './tabs';
 
 const AppLayout = () => {
     const { platform, setPlatform } = usePlatformContext();
@@ -33,6 +33,7 @@ export const App = () => {
                 <Route path="/" element={<PlatformTab />} />
                 <Route path="/animation" element={<AnimationTab />} />
                 <Route path="/options" element={<OptionsTab />} />
+                <Route path="/customize" element={<CustomizeTab />} />
             </Route>
             <Route path="/detail/:id" element={<DetailPage />} />
         </Routes>

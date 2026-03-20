@@ -62,7 +62,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
 
     const navigateWithTransition = useCallback(
         (to: To | number, options?: TransitionNavigateOptions): Promise<void> => {
-            const { transition, direction, animation, ...navigateOptions } = options ?? {};
+            const { transition, direction, animation, customization, ...navigateOptions } = options ?? {};
 
             // replace: true defaults to no transition (tab bar navigation)
             // explicit transition: true/false overrides this behavior
@@ -100,6 +100,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                     animation,
                     direction: resolvedDirection,
                     config,
+                    customization,
                 }
             );
         },

@@ -4,6 +4,39 @@
    ============================================ */
 
 /* ============================================
+   CSS Custom Properties (Customization API)
+
+   Override these variables to customize animations:
+
+   :root {
+     --pt-slide-duration: 500ms;
+     --pt-slide-easing: ease-in-out;
+     --pt-lift-duration: 150ms;
+     --pt-fade-duration: 300ms;
+     --pt-zoom-duration: 300ms;
+   }
+   ============================================ */
+
+:root {
+    /* iOS Slide */
+    --pt-slide-duration: 350ms;
+    --pt-slide-easing: cubic-bezier(0.32, 0.72, 0, 1);
+
+    /* Android Lift */
+    --pt-lift-duration: 100ms;
+    --pt-lift-easing: ease-out;
+
+    /* Fade */
+    --pt-fade-duration: 200ms;
+    --pt-fade-easing-in: ease-in;
+    --pt-fade-easing-out: ease-out;
+
+    /* Zoom */
+    --pt-zoom-duration: 250ms;
+    --pt-zoom-easing: ease-out;
+}
+
+/* ============================================
    iOS View Transitions (Slide Left/Right)
    ============================================ */
 
@@ -52,8 +85,8 @@
 /* Base view transition settings - disable default crossfade */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-    animation-duration: 350ms;
-    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-duration: var(--pt-duration-override, var(--pt-slide-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-slide-easing));
     animation-fill-mode: both;
     /* Prevent flickering */
     mix-blend-mode: normal;
@@ -98,17 +131,6 @@
     }
 }
 
-@keyframes lift-up-leave {
-    from {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
 /* Keyframes for Android back animations (Lift Down) */
 @keyframes lift-down-leave {
     from {
@@ -121,44 +143,33 @@
     }
 }
 
-@keyframes lift-down-enter {
-    from {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
 /* Android forward navigation (default) - new page lifts up */
 .android::view-transition-old(root) {
-    animation-name: lift-up-leave;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-name: none;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
 }
 
 .android::view-transition-new(root) {
     animation-name: lift-up-enter;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 2;
 }
 
 /* Android back navigation - old page lifts down */
 .android.back-navigation::view-transition-old(root) {
     animation-name: lift-down-leave;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 2;
 }
 
 .android.back-navigation::view-transition-new(root) {
-    animation-name: lift-down-enter;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-name: none;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
 }
 
@@ -187,15 +198,15 @@
 
 .animation-fade::view-transition-old(root) {
     animation-name: fade-out;
-    animation-duration: 200ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-fade-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing-out));
     z-index: 1;
 }
 
 .animation-fade::view-transition-new(root) {
     animation-name: fade-in;
-    animation-duration: 200ms;
-    animation-timing-function: ease-in;
+    animation-duration: var(--pt-duration-override, var(--pt-fade-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing-in));
     z-index: 2;
 }
 
@@ -261,15 +272,15 @@
 
 .animation-zoom::view-transition-old(root) {
     animation-name: zoom-out;
-    animation-duration: 250ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-zoom-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-zoom-easing));
     z-index: 1;
 }
 
 .animation-zoom::view-transition-new(root) {
     animation-name: zoom-in;
-    animation-duration: 250ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-zoom-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-zoom-easing));
     z-index: 2;
 }
 
@@ -291,15 +302,15 @@
 
 .animation-slide::view-transition-old(root) {
     animation-name: slide-out-to-left;
-    animation-duration: 350ms;
-    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-duration: var(--pt-duration-override, var(--pt-slide-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-slide-easing));
     z-index: 1;
 }
 
 .animation-slide::view-transition-new(root) {
     animation-name: slide-in-from-right;
-    animation-duration: 350ms;
-    animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    animation-duration: var(--pt-duration-override, var(--pt-slide-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-slide-easing));
     z-index: 2;
 }
 
@@ -319,16 +330,16 @@
    ============================================ */
 
 .animation-lift::view-transition-old(root) {
-    animation-name: lift-up-leave;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-name: none;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
 }
 
 .animation-lift::view-transition-new(root) {
     animation-name: lift-up-enter;
-    animation-duration: 100ms;
-    animation-timing-function: ease-out;
+    animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 2;
 }
 
@@ -338,20 +349,8 @@
 }
 
 .animation-lift.back-navigation::view-transition-new(root) {
-    animation-name: lift-down-enter;
+    animation-name: none;
     z-index: 1;
-}
-
-/* ============================================
-   No Animation (Instant)
-   Note: Handled in JS by skipping startViewTransition
-   This is a fallback in case the class is applied
-   ============================================ */
-
-.animation-none::view-transition-old(root),
-.animation-none::view-transition-new(root) {
-    animation: none !important;
-    animation-duration: 0ms !important;
 }
 
 /* ============================================

@@ -7,6 +7,7 @@ const TABS = [
     { path: '/', label: 'Platform' },
     { path: '/animation', label: 'Animation' },
     { path: '/options', label: 'Options' },
+    { path: '/customize', label: 'Customize' },
 ];
 
 export const TabNav = () => {

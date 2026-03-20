@@ -15,6 +15,8 @@ Built for hybrid mobile apps that need native-feeling navigation in WebView.
 
 - iOS/Android platform auto-detection
 - Multiple animation types (slide, lift, fade, zoom)
+- Customizable via CSS custom properties (`--pt-*`)
+- Per-navigation timing override (duration, easing)
 - Promise-based navigation
 - SSR safe
 - Zero dependencies (except framework peer deps)
@@ -111,6 +113,12 @@ navigate(-1);                               // Back
 navigate('/home', { direction: 'back' });   // Path with back animation
 navigate('/modal', { animation: 'fade' });  // Custom animation
 navigate('/tab', { replace: true });        // No transition (tab switch)
+
+// Per-navigation customization
+navigate('/modal', {
+    animation: 'fade',
+    customization: { duration: 500, easing: 'ease-in-out' }
+});
 ```
 
 ### Animation Types
@@ -122,6 +130,69 @@ navigate('/tab', { replace: true });        // No transition (tab switch)
 | `fade` | 200ms | Modals, overlays |
 | `zoom` | 250ms | Galleries, images |
 | `none` | 0ms | Instant switch |
+
+## Customization
+
+### CSS Custom Properties
+
+Override default animation timings globally via CSS variables:
+
+```css
+:root {
+    /* iOS Slide */
+    --pt-slide-duration: 500ms;
+    --pt-slide-easing: ease-in-out;
+
+    /* Android Lift */
+    --pt-lift-duration: 150ms;
+    --pt-lift-easing: ease-out;
+
+    /* Fade */
+    --pt-fade-duration: 300ms;
+    --pt-fade-easing-in: ease-in;
+    --pt-fade-easing-out: ease-out;
+
+    /* Zoom */
+    --pt-zoom-duration: 300ms;
+    --pt-zoom-easing: ease-out;
+}
+```
+
+### Per-Navigation Override
+
+Override timing for a single navigation via the `customization` option:
+
+```tsx
+// React
+navigate('/modal', {
+    animation: 'fade',
+    customization: { duration: 500, easing: 'ease-in-out' }
+});
+```
+
+```vue
+<!-- Vue -->
+<script setup>
+navigate('/modal', {
+    animation: 'fade',
+    customization: { duration: 500, easing: 'ease-in-out' }
+});
+</script>
+```
+
+### CSS Variable Reference
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--pt-slide-duration` | `350ms` | iOS slide animation duration |
+| `--pt-slide-easing` | `cubic-bezier(0.32, 0.72, 0, 1)` | iOS slide easing |
+| `--pt-lift-duration` | `100ms` | Android lift animation duration |
+| `--pt-lift-easing` | `ease-out` | Android lift easing |
+| `--pt-fade-duration` | `200ms` | Fade animation duration |
+| `--pt-fade-easing-in` | `ease-in` | Fade-in easing |
+| `--pt-fade-easing-out` | `ease-out` | Fade-out easing |
+| `--pt-zoom-duration` | `250ms` | Zoom animation duration |
+| `--pt-zoom-easing` | `ease-out` | Zoom easing |
 
 ## Browser Support
 
