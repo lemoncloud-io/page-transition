@@ -1,6 +1,6 @@
 import type { RouteLocationRaw } from 'vue-router';
 
-import type { AnimationType, NavigationDirection } from '@lemoncloud/page-transition-core';
+import type { AnimationType, NavigationDirection, TransitionCustomization } from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
 export interface TransitionNavigateOptions {
@@ -67,6 +67,23 @@ export interface TransitionNavigateOptions {
      * ```
      */
     animation?: AnimationType;
+
+    /**
+     * Per-navigation customization for animation timing.
+     * Overrides CSS custom properties for this single navigation.
+     *
+     * @example
+     * ```vue
+     * <script setup>
+     * const { navigate } = useNavigateWithTransition();
+     * navigate('/modal', {
+     *   animation: 'fade',
+     *   customization: { duration: 500, easing: 'ease-in-out' }
+     * });
+     * </script>
+     * ```
+     */
+    customization?: TransitionCustomization;
 }
 
 /** Navigate function with view transition support (returns Promise) */

@@ -34,6 +34,14 @@ export interface PageTransitionConfig {
     detectPlatform?: () => PlatformType | undefined;
 }
 
+/** Per-navigation customization for animation timing */
+export interface TransitionCustomization {
+    /** Animation duration in milliseconds */
+    duration?: number;
+    /** CSS easing function (e.g., 'ease-in-out', 'cubic-bezier(0.4, 0, 0.2, 1)') */
+    easing?: string;
+}
+
 /** Options for executing a page transition */
 export interface TransitionOptions {
     /**
@@ -52,4 +60,18 @@ export interface TransitionOptions {
      * Platform configuration for animations.
      */
     config?: PageTransitionConfig;
+
+    /**
+     * Per-navigation customization that overrides CSS custom properties.
+     * Useful for one-off timing adjustments without changing global CSS variables.
+     *
+     * @example
+     * ```ts
+     * await executePageTransition(navigationFn, {
+     *   animation: 'fade',
+     *   customization: { duration: 500, easing: 'ease-in-out' }
+     * });
+     * ```
+     */
+    customization?: TransitionCustomization;
 }

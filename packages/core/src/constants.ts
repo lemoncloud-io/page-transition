@@ -10,9 +10,6 @@ export const ANIMATION_FADE_CLASS = 'animation-fade';
 /** CSS class for zoom animation */
 export const ANIMATION_ZOOM_CLASS = 'animation-zoom';
 
-/** CSS class for no animation (instant) */
-export const ANIMATION_NONE_CLASS = 'animation-none';
-
 /** CSS class for lift animation (explicit, not platform-based) */
 export const ANIMATION_LIFT_CLASS = 'animation-lift';
 
@@ -25,7 +22,6 @@ export const ANIMATION_CLASSES = [
     ANDROID_PLATFORM_CLASS,
     ANIMATION_FADE_CLASS,
     ANIMATION_ZOOM_CLASS,
-    ANIMATION_NONE_CLASS,
     ANIMATION_LIFT_CLASS,
     ANIMATION_SLIDE_CLASS,
 ] as const;

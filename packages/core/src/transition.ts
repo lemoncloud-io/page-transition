@@ -9,7 +9,7 @@ import {
 } from './constants';
 import { resolvePlatform } from './platform';
 
-import type { AnimationType, TransitionOptions } from './types';
+import type { AnimationType, TransitionCustomization, TransitionOptions } from './types';
 
 /**
  * Resolves CSS classes to add based on transition options.
@@ -17,18 +17,19 @@ import type { AnimationType, TransitionOptions } from './types';
  * @param options - Transition options
  * @returns Array of CSS class names to add
  */
+const ANIMATION_CLASS_MAP: Record<Exclude<AnimationType, 'none'>, string> = {
+    fade: ANIMATION_FADE_CLASS,
+    zoom: ANIMATION_ZOOM_CLASS,
+    lift: ANIMATION_LIFT_CLASS,
+    slide: ANIMATION_SLIDE_CLASS,
+};
+
 export const resolveTransitionClasses = (options?: TransitionOptions): string[] => {
     const classesToAdd: string[] = [];
 
     // Animation type handling
     if (options?.animation && options.animation !== 'none') {
-        const animationClassMap: Record<Exclude<AnimationType, 'none'>, string> = {
-            fade: ANIMATION_FADE_CLASS,
-            zoom: ANIMATION_ZOOM_CLASS,
-            lift: ANIMATION_LIFT_CLASS,
-            slide: ANIMATION_SLIDE_CLASS,
-        };
-        classesToAdd.push(animationClassMap[options.animation]);
+        classesToAdd.push(ANIMATION_CLASS_MAP[options.animation]);
     } else if (!options?.animation) {
         // Use platform-based animation (default behavior)
         const platform = resolvePlatform(options?.config);
@@ -50,6 +51,34 @@ export const resolveTransitionClasses = (options?: TransitionOptions): string[] 
  */
 export const cleanupTransitionClasses = (): void => {
     ANIMATION_CLASSES.forEach(cls => document.documentElement.classList.remove(cls));
+};
+
+const DURATION_OVERRIDE_PROPERTY = '--pt-duration-override';
+const EASING_OVERRIDE_PROPERTY = '--pt-easing-override';
+
+/**
+ * Applies per-navigation customization as CSS custom property overrides.
+ * These override the animation-specific variables (e.g., --pt-slide-duration)
+ * and are cleaned up after the transition completes.
+ */
+const applyCustomization = (customization?: TransitionCustomization): void => {
+    if (!customization) return;
+    const root = document.documentElement;
+    if (customization.duration !== undefined) {
+        root.style.setProperty(DURATION_OVERRIDE_PROPERTY, `${customization.duration}ms`);
+    }
+    if (customization.easing !== undefined) {
+        root.style.setProperty(EASING_OVERRIDE_PROPERTY, customization.easing);
+    }
+};
+
+/**
+ * Removes per-navigation customization CSS custom properties.
+ */
+const cleanupCustomization = (): void => {
+    const root = document.documentElement;
+    root.style.removeProperty(DURATION_OVERRIDE_PROPERTY);
+    root.style.removeProperty(EASING_OVERRIDE_PROPERTY);
 };
 
 /**
@@ -119,13 +148,15 @@ export const executePageTransition = (
     // Add all classes
     classesToAdd.forEach(cls => document.documentElement.classList.add(cls));
 
-    // Start view transition
-    const viewTransition = document.startViewTransition!(() => {
-        return navigationFn();
-    });
+    // Apply per-navigation customization (duration/easing overrides)
+    applyCustomization(options?.customization);
 
-    // Remove all animation classes after transition completes
+    // Start view transition (safe: guarded by isViewTransitionSupported() above)
+    const viewTransition = document.startViewTransition!(() => navigationFn());
+
+    // Remove all animation classes and customization after transition completes
     return viewTransition.finished.finally(() => {
         cleanupTransitionClasses();
+        cleanupCustomization();
     });
 };

@@ -20,6 +20,7 @@ export type {
     NavigationDirection,
     AnimationType,
     PageTransitionConfig,
+    TransitionCustomization,
     TransitionOptions,
     ViewTransition,
     ViewTransitionCallback,
