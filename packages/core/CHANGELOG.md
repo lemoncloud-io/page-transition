@@ -1,5 +1,11 @@
 # @lemoncloud/page-transition-core
 
+## 0.1.1
+
+### Patch Changes
+
+- 5478fa1: fix: replace opacity with filter brightness in iOS slide animation to prevent background bleed-through in dark mode
+
 ## 0.1.0
 
 ### Minor Changes

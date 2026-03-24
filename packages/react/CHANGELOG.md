@@ -1,5 +1,12 @@
 # @lemoncloud/react-page-transition
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [5478fa1]
+    - @lemoncloud/page-transition-core@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
