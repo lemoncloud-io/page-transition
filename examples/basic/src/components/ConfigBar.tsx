@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { PlatformType } from '@lemoncloud/react-page-transition';
 
 interface ConfigBarProps {
@@ -6,6 +7,14 @@ interface ConfigBarProps {
 }
 
 export const ConfigBar = ({ platform, onPlatformChange }: ConfigBarProps) => {
+    const [dark, setDark] = useState(false);
+
+    const toggleDark = () => {
+        const next = !dark;
+        setDark(next);
+        document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    };
+
     return (
         <div className="config-bar">
             <span className="config-label">Platform:</span>
@@ -29,6 +38,12 @@ export const ConfigBar = ({ platform, onPlatformChange }: ConfigBarProps) => {
                     Android
                 </button>
             </div>
+
+            <div className="config-divider" />
+
+            <button className="config-btn" onClick={toggleDark}>
+                {dark ? 'Light' : 'Dark'}
+            </button>
         </div>
     );
 };

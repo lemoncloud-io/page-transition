@@ -468,3 +468,122 @@ body {
     color: #86868b;
     margin-top: 12px;
 }
+
+/* ============================================
+   Config Bar Divider
+   ============================================ */
+
+.config-divider {
+    width: 1px;
+    height: 20px;
+    background: #e5e5e5;
+    margin: 0 4px;
+}
+
+/* ============================================
+   Dark Mode
+   ============================================ */
+
+[data-theme="dark"] body {
+    background: #1c1c1e;
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .app-header {
+    background: #2c2c2e;
+    border-bottom-color: #3a3a3c;
+}
+
+[data-theme="dark"] .app-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .tab-nav {
+    background: #2c2c2e;
+    border-bottom-color: #3a3a3c;
+}
+
+[data-theme="dark"] .tab-btn {
+    color: #98989d;
+}
+
+[data-theme="dark"] .tab-btn:hover {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .demo-card {
+    background: #2c2c2e;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .demo-card-title {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .animation-card {
+    background: #2c2c2e;
+    border-color: #3a3a3c;
+}
+
+[data-theme="dark"] .animation-card:hover {
+    border-color: #007aff;
+    background: #1a2a3a;
+}
+
+[data-theme="dark"] .animation-title {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .customize-chip {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .customize-chip:hover {
+    background: #48484a;
+}
+
+[data-theme="dark"] .config-bar {
+    background: #2c2c2e;
+    border-top-color: #3a3a3c;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .config-label {
+    color: #98989d;
+}
+
+[data-theme="dark"] .config-btn {
+    background: #3a3a3c;
+    border-color: #48484a;
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .config-btn:hover {
+    background: #48484a;
+}
+
+[data-theme="dark"] .config-divider {
+    background: #3a3a3c;
+}
+
+[data-theme="dark"] .detail-page {
+    background: #1c1c1e;
+}
+
+[data-theme="dark"] .detail-header {
+    border-bottom-color: #3a3a3c;
+}
+
+[data-theme="dark"] .detail-header h1 {
+    color: #f5f5f7;
+}
+
+[data-theme="dark"] .detail-card {
+    background: #2c2c2e;
+}
+
+[data-theme="dark"] .detail-card code {
+    background: #3a3a3c;
+}

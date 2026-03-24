@@ -53,11 +53,11 @@
 @keyframes slide-out-to-left {
     from {
         transform: translateX(0);
-        opacity: 1;
+        filter: brightness(1);
     }
     to {
         transform: translateX(-30%);
-        opacity: 0.8;
+        filter: brightness(0.8);
     }
 }
 
@@ -65,11 +65,11 @@
 @keyframes slide-in-from-left {
     from {
         transform: translateX(-30%);
-        opacity: 0.8;
+        filter: brightness(0.8);
     }
     to {
         transform: translateX(0);
-        opacity: 1;
+        filter: brightness(1);
     }
 }
 
