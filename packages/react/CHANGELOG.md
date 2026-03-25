@@ -1,5 +1,16 @@
 # @lemoncloud/react-page-transition
 
+## 1.0.0
+
+### Major Changes
+
+- df960f6: align animations with modern design systems
+
+### Patch Changes
+
+- Updated dependencies [df960f6]
+    - @lemoncloud/page-transition-core@1.0.0
+
 ## 0.1.1
 
 ### Patch Changes

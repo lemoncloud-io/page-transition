@@ -1,6 +1,6 @@
 {
     "name": "@lemoncloud/page-transition-core",
-    "version": "0.1.1",
+    "version": "1.0.0",
     "description": "Framework-agnostic page transitions using View Transitions API",
     "type": "module",
     "exports": {
