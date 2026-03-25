@@ -11,9 +11,9 @@
    :root {
      --pt-slide-duration: 500ms;
      --pt-slide-easing: ease-in-out;
-     --pt-lift-duration: 150ms;
-     --pt-fade-duration: 300ms;
-     --pt-zoom-duration: 300ms;
+     --pt-lift-duration: 500ms;
+     --pt-fade-duration: 500ms;
+     --pt-zoom-duration: 500ms;
    }
    ============================================ */
 
@@ -22,18 +22,17 @@
     --pt-slide-duration: 350ms;
     --pt-slide-easing: cubic-bezier(0.32, 0.72, 0, 1);
 
-    /* Android Lift */
-    --pt-lift-duration: 100ms;
-    --pt-lift-easing: ease-out;
+    /* Android Lift (Material Design 3 SharedAxis Y) */
+    --pt-lift-duration: 450ms;
+    --pt-lift-easing: cubic-bezier(0.2, 0, 0, 1);
 
-    /* Fade */
-    --pt-fade-duration: 200ms;
-    --pt-fade-easing-in: ease-in;
-    --pt-fade-easing-out: ease-out;
+    /* Fade (iOS CrossDissolve) */
+    --pt-fade-duration: 350ms;
+    --pt-fade-easing: cubic-bezier(0.42, 0, 0.58, 1);
 
-    /* Zoom */
-    --pt-zoom-duration: 250ms;
-    --pt-zoom-easing: ease-out;
+    /* Zoom (iOS style) */
+    --pt-zoom-duration: 350ms;
+    --pt-zoom-easing: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 /* ============================================
@@ -57,7 +56,7 @@
     }
     to {
         transform: translateX(-30%);
-        filter: brightness(0.8);
+        filter: brightness(0.93);
     }
 }
 
@@ -65,7 +64,7 @@
 @keyframes slide-in-from-left {
     from {
         transform: translateX(-30%);
-        filter: brightness(0.8);
+        filter: brightness(0.93);
     }
     to {
         transform: translateX(0);
@@ -119,11 +118,11 @@
    Android View Transitions (Lift Up/Down)
    ============================================ */
 
-/* Keyframes for Android forward animations (Lift Up) */
+/* Keyframes for Android forward animations (SharedAxis Y - Push) */
 @keyframes lift-up-enter {
     from {
-        transform: translateY(10%);
-        opacity: 0.5;
+        transform: translateY(30px);
+        opacity: 0;
     }
     to {
         transform: translateY(0);
@@ -131,21 +130,43 @@
     }
 }
 
-/* Keyframes for Android back animations (Lift Down) */
+@keyframes lift-up-exit {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+}
+
+/* Keyframes for Android back animations (SharedAxis Y - Pop) */
+@keyframes lift-down-enter {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @keyframes lift-down-leave {
     from {
         transform: translateY(0);
         opacity: 1;
     }
     to {
-        transform: translateY(10%);
+        transform: translateY(30px);
         opacity: 0;
     }
 }
 
-/* Android forward navigation (default) - new page lifts up */
+/* Android forward navigation (default) - SharedAxis Y push */
 .android::view-transition-old(root) {
-    animation-name: none;
+    animation-name: lift-up-exit;
     animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
     animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
@@ -158,7 +179,7 @@
     z-index: 2;
 }
 
-/* Android back navigation - old page lifts down */
+/* Android back navigation - SharedAxis Y pop */
 .android.back-navigation::view-transition-old(root) {
     animation-name: lift-down-leave;
     animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
@@ -167,14 +188,15 @@
 }
 
 .android.back-navigation::view-transition-new(root) {
-    animation-name: none;
+    animation-name: lift-down-enter;
     animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
     animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
 }
 
 /* ============================================
-   Fade Animation (Crossfade)
+   Fade Animation (iOS CrossDissolve)
+   Simultaneous crossfade, 350ms, ease-in-out
    Good for: modals, auth flows, overlays
    ============================================ */
 
@@ -199,14 +221,14 @@
 .animation-fade::view-transition-old(root) {
     animation-name: fade-out;
     animation-duration: var(--pt-duration-override, var(--pt-fade-duration));
-    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing-out));
+    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing));
     z-index: 1;
 }
 
 .animation-fade::view-transition-new(root) {
     animation-name: fade-in;
     animation-duration: var(--pt-duration-override, var(--pt-fade-duration));
-    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing-in));
+    animation-timing-function: var(--pt-easing-override, var(--pt-fade-easing));
     z-index: 2;
 }
 
@@ -222,13 +244,13 @@
 }
 
 /* ============================================
-   Zoom Animation (Scale + Fade)
+   Zoom Animation (iOS style Scale + Fade)
    Good for: image galleries, detail views
    ============================================ */
 
 @keyframes zoom-in {
     from {
-        transform: scale(0.9);
+        transform: scale(0.75);
         opacity: 0;
     }
     to {
@@ -243,33 +265,12 @@
         opacity: 1;
     }
     to {
-        transform: scale(1.1);
+        transform: scale(0.75);
         opacity: 0;
     }
 }
 
-@keyframes zoom-in-reverse {
-    from {
-        transform: scale(1.1);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes zoom-out-reverse {
-    from {
-        transform: scale(1);
-        opacity: 1;
-    }
-    to {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-}
-
+/* Forward: old shrinks out, new grows in */
 .animation-zoom::view-transition-old(root) {
     animation-name: zoom-out;
     animation-duration: var(--pt-duration-override, var(--pt-zoom-duration));
@@ -284,14 +285,18 @@
     z-index: 2;
 }
 
-/* Zoom back navigation (reverse direction) */
+/* Back: reverse - old shrinks out, new grows in */
 .animation-zoom.back-navigation::view-transition-old(root) {
-    animation-name: zoom-out-reverse;
+    animation-name: zoom-out;
+    animation-duration: var(--pt-duration-override, var(--pt-zoom-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-zoom-easing));
     z-index: 2;
 }
 
 .animation-zoom.back-navigation::view-transition-new(root) {
-    animation-name: zoom-in-reverse;
+    animation-name: zoom-in;
+    animation-duration: var(--pt-duration-override, var(--pt-zoom-duration));
+    animation-timing-function: var(--pt-easing-override, var(--pt-zoom-easing));
     z-index: 1;
 }
 
@@ -330,7 +335,7 @@
    ============================================ */
 
 .animation-lift::view-transition-old(root) {
-    animation-name: none;
+    animation-name: lift-up-exit;
     animation-duration: var(--pt-duration-override, var(--pt-lift-duration));
     animation-timing-function: var(--pt-easing-override, var(--pt-lift-easing));
     z-index: 1;
@@ -349,7 +354,7 @@
 }
 
 .animation-lift.back-navigation::view-transition-new(root) {
-    animation-name: none;
+    animation-name: lift-down-enter;
     z-index: 1;
 }
 

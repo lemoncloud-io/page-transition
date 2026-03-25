@@ -86,9 +86,9 @@ Detects platform from user agent. Returns `'ios'`, `'android'`, or `undefined`.
 | Type | Duration | Description |
 |------|----------|-------------|
 | `slide` | 350ms | iOS horizontal slide |
-| `lift` | 100ms | Android vertical lift |
-| `fade` | 200ms | Crossfade |
-| `zoom` | 250ms | Scale with fade |
+| `lift` | 450ms | Android vertical lift (MD3 SharedAxis Y) |
+| `fade` | 350ms | iOS CrossDissolve |
+| `zoom` | 350ms | iOS scale with fade |
 
 ## Framework Packages
 
