@@ -85,9 +85,9 @@ console.log('Transition complete!');
 | Type | Duration | Use Case |
 |------|----------|----------|
 | `slide` | 350ms | iOS default |
-| `lift` | 100ms | Android default |
-| `fade` | 200ms | Modals |
-| `zoom` | 250ms | Galleries |
+| `lift` | 450ms | Android default |
+| `fade` | 350ms | Modals |
+| `zoom` | 350ms | Galleries |
 
 ## Browser Support
 

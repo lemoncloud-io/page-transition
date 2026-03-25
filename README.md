@@ -9,7 +9,7 @@ Built for hybrid mobile apps that need native-feeling navigation in WebView.
 | iOS Style | Android Style |
 |:---------:|:-------------:|
 | ![iOS](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/ios.gif) | ![Android](https://raw.githubusercontent.com/lemoncloud-io/page-transition/main/.github/android.gif) |
-| Horizontal slide (350ms) | Vertical lift (100ms) |
+| Horizontal slide (350ms) | Vertical lift (450ms) |
 
 ## Features
 
@@ -126,9 +126,9 @@ navigate('/modal', {
 | Type | Duration | Use Case |
 |------|----------|----------|
 | `slide` | 350ms | iOS default - horizontal |
-| `lift` | 100ms | Android default - vertical |
-| `fade` | 200ms | Modals, overlays |
-| `zoom` | 250ms | Galleries, images |
+| `lift` | 450ms | Android default - vertical |
+| `fade` | 350ms | Modals, overlays |
+| `zoom` | 350ms | Galleries, images |
 | `none` | 0ms | Instant switch |
 
 ## Customization
@@ -144,17 +144,16 @@ Override default animation timings globally via CSS variables:
     --pt-slide-easing: ease-in-out;
 
     /* Android Lift */
-    --pt-lift-duration: 150ms;
+    --pt-lift-duration: 500ms;
     --pt-lift-easing: ease-out;
 
     /* Fade */
-    --pt-fade-duration: 300ms;
-    --pt-fade-easing-in: ease-in;
-    --pt-fade-easing-out: ease-out;
+    --pt-fade-duration: 500ms;
+    --pt-fade-easing: ease-in-out;
 
     /* Zoom */
-    --pt-zoom-duration: 300ms;
-    --pt-zoom-easing: ease-out;
+    --pt-zoom-duration: 500ms;
+    --pt-zoom-easing: ease-in-out;
 }
 ```
 
@@ -186,13 +185,12 @@ navigate('/modal', {
 |----------|---------|-------------|
 | `--pt-slide-duration` | `350ms` | iOS slide animation duration |
 | `--pt-slide-easing` | `cubic-bezier(0.32, 0.72, 0, 1)` | iOS slide easing |
-| `--pt-lift-duration` | `100ms` | Android lift animation duration |
-| `--pt-lift-easing` | `ease-out` | Android lift easing |
-| `--pt-fade-duration` | `200ms` | Fade animation duration |
-| `--pt-fade-easing-in` | `ease-in` | Fade-in easing |
-| `--pt-fade-easing-out` | `ease-out` | Fade-out easing |
-| `--pt-zoom-duration` | `250ms` | Zoom animation duration |
-| `--pt-zoom-easing` | `ease-out` | Zoom easing |
+| `--pt-lift-duration` | `450ms` | Android lift animation duration |
+| `--pt-lift-easing` | `cubic-bezier(0.2, 0, 0, 1)` | Android lift easing (MD3 Emphasized) |
+| `--pt-fade-duration` | `350ms` | Fade animation duration |
+| `--pt-fade-easing` | `cubic-bezier(0.42, 0, 0.58, 1)` | Fade easing (ease-in-out) |
+| `--pt-zoom-duration` | `350ms` | Zoom animation duration |
+| `--pt-zoom-easing` | `cubic-bezier(0.32, 0.72, 0, 1)` | Zoom easing (iOS spring) |
 
 ## Browser Support
 
