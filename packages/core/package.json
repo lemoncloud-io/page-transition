@@ -52,5 +52,6 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "homepage": "https://github.com/lemoncloud-io/page-transition/tree/main/packages/core#readme"
 }
