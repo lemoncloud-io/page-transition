@@ -5,7 +5,7 @@
     "description": "iOS/Android style page transitions using View Transitions API - Monorepo",
     "type": "module",
     "scripts": {
-        "build": "pnpm -r --filter './packages/*' build",
+        "build": "pnpm --filter @lemoncloud/page-transition-core build && pnpm --filter @lemoncloud/react-page-transition --filter @lemoncloud/vue-page-transition build",
         "dev": "pnpm -r --parallel --filter './packages/*' dev",
         "test": "vitest",
         "test:run": "vitest run",
