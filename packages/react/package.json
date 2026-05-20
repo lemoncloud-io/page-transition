@@ -32,7 +32,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@lemoncloud/page-transition-core": "workspace:*"
+        "@lemoncloud/page-transition-core": "workspace:^"
     },
     "peerDependencies": {
         "react": ">=18.0.0",
@@ -65,5 +65,6 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "homepage": "https://github.com/lemoncloud-io/page-transition/tree/main/packages/react#readme"
 }
