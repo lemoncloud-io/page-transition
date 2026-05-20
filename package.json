@@ -13,12 +13,17 @@
         "lint": "eslint packages/*/src",
         "typecheck": "pnpm -r --filter './packages/*' typecheck",
         "clean": "rm -rf packages/*/dist",
-        "changeset": "changeset",
-        "version": "changeset version",
-        "release": "changeset publish"
+        "release": "pnpm -r --workspace-concurrency=1 --filter './packages/*' exec -- npx --no-install semantic-release -e semantic-release-monorepo"
     },
     "devDependencies": {
-        "@changesets/cli": "2.30.0",
+        "@semantic-release/changelog": "^6.0.0",
+        "@semantic-release/commit-analyzer": "^13.0.0",
+        "@semantic-release/git": "^10.0.0",
+        "@semantic-release/github": "^11.0.0",
+        "@semantic-release/npm": "^12.0.0",
+        "@semantic-release/release-notes-generator": "^14.0.0",
+        "semantic-release": "^24.0.0",
+        "semantic-release-monorepo": "^8.0.0",
         "@eslint/js": "^9.0.0",
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "^16.0.0",
