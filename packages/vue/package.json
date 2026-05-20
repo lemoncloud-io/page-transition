@@ -32,7 +32,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@lemoncloud/page-transition-core": "workspace:*"
+        "@lemoncloud/page-transition-core": "workspace:^"
     },
     "peerDependencies": {
         "vue": ">=3.0.0",
