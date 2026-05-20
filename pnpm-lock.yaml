@@ -17,6 +17,9 @@ importers:
       '@semantic-release/commit-analyzer':
         specifier: ^13.0.0
         version: 13.0.1(semantic-release@24.2.9(typescript@5.9.3))
+      '@semantic-release/exec':
+        specifier: 7.1.0
+        version: 7.1.0(semantic-release@24.2.9(typescript@5.9.3))
       '@semantic-release/git':
         specifier: ^10.0.0
         version: 10.0.1(semantic-release@24.2.9(typescript@5.9.3))
@@ -216,8 +219,8 @@ importers:
   packages/react:
     dependencies:
       '@lemoncloud/page-transition-core':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^1.0.0
+        version: 1.0.2
       react-dom:
         specifier: '>=18.0.0'
         version: 18.3.1(react@18.3.1)
@@ -241,8 +244,8 @@ importers:
   packages/vue:
     dependencies:
       '@lemoncloud/page-transition-core':
-        specifier: workspace:*
-        version: link:../core
+        specifier: ^1.0.0
+        version: 1.0.2
     devDependencies:
       tsup:
         specifier: ^8.3.0
@@ -1879,6 +1882,9 @@ packages:
   '@leichtgewicht/ip-codec@2.0.5':
     resolution: {integrity: sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==}
 
+  '@lemoncloud/page-transition-core@1.0.2':
+    resolution: {integrity: sha512-63M6GkWWo3QsLwqynX1a109B+V2bFLm1TAj5UtryZAFRuuy9Ky4SEMYObqs9A4yYYQLUlnrwXaqFTFTcFDTtXA==}
+
   '@listr2/prompt-adapter-inquirer@2.0.15':
     resolution: {integrity: sha512-MZrGem/Ujjd4cPTLYDfCZK2iKKeiO/8OX13S6jqxldLs0Prf2aGqVlJ77nMBqMv7fzqgXEgjrNHLXcKR8l9lOg==}
     engines: {node: '>=18.0.0'}
@@ -2310,6 +2316,12 @@ packages:
   '@semantic-release/error@4.0.0':
     resolution: {integrity: sha512-mgdxrHTLOjOddRVYIYDo0fR3/v61GNN1YGkfbrjuIKg/uMgCd+Qzo3UAXJ+woLQQpos4pl5Esuw5A7AoNlzjUQ==}
     engines: {node: '>=18'}
+
+  '@semantic-release/exec@7.1.0':
+    resolution: {integrity: sha512-4ycZ2atgEUutspPZ2hxO6z8JoQt4+y/kkHvfZ1cZxgl9WKJId1xPj+UadwInj+gMn2Gsv+fLnbrZ4s+6tK2TFQ==}
+    engines: {node: '>=20.8.1'}
+    peerDependencies:
+      semantic-release: '>=24.1.0'
 
   '@semantic-release/git@10.0.1':
     resolution: {integrity: sha512-eWrx5KguUcU2wUPaO6sfvZI0wPafUKAMNC18aXY4EnNcrZL86dEmpNVnC9uMpGZkmZJ9EfCVJBQx4pV4EMGT1w==}
@@ -8184,6 +8196,8 @@ snapshots:
 
   '@leichtgewicht/ip-codec@2.0.5': {}
 
+  '@lemoncloud/page-transition-core@1.0.2': {}
+
   '@listr2/prompt-adapter-inquirer@2.0.15(@inquirer/prompts@5.3.8)':
     dependencies:
       '@inquirer/prompts': 5.3.8
@@ -8552,6 +8566,18 @@ snapshots:
   '@semantic-release/error@3.0.0': {}
 
   '@semantic-release/error@4.0.0': {}
+
+  '@semantic-release/exec@7.1.0(semantic-release@24.2.9(typescript@5.9.3))':
+    dependencies:
+      '@semantic-release/error': 4.0.0
+      aggregate-error: 3.1.0
+      debug: 4.4.3
+      execa: 9.6.1
+      lodash-es: 4.18.1
+      parse-json: 8.3.0
+      semantic-release: 24.2.9(typescript@5.9.3)
+    transitivePeerDependencies:
+      - supports-color
 
   '@semantic-release/git@10.0.1(semantic-release@24.2.9(typescript@5.9.3))':
     dependencies:
