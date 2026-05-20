@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 import { executePageTransition, isViewTransitionSupported } from '@lemoncloud/page-transition-core';
@@ -88,13 +89,17 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                     : 'forward';
 
             // Execute navigation with transition
+            // flushSync ensures React renders synchronously so the View Transitions
+            // API captures the correct DOM state in its snapshot.
             return executePageTransition(
                 () => {
-                    if (typeof to === 'number') {
-                        navigate(to);
-                    } else {
-                        navigate(to, navigateOptions);
-                    }
+                    flushSync(() => {
+                        if (typeof to === 'number') {
+                            navigate(to);
+                        } else {
+                            navigate(to, navigateOptions);
+                        }
+                    });
                 },
                 {
                     animation,

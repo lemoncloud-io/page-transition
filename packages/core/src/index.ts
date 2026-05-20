@@ -6,6 +6,10 @@ export {
     isViewTransitionSupported,
 } from './transition';
 
+// Scroll management
+export { pushScrollPosition, popScrollPosition, clearScrollStack } from './scroll';
+export type { ScrollPosition } from './scroll';
+
 // Platform detection
 export { detectPlatform, resolvePlatform } from './platform';
 

@@ -8,6 +8,7 @@ import {
     BACK_NAVIGATION_CLASS,
 } from './constants';
 import { resolvePlatform } from './platform';
+import { popScrollPosition, pushScrollPosition } from './scroll';
 
 import type { AnimationType, TransitionCustomization, TransitionOptions } from './types';
 
@@ -142,6 +143,12 @@ export const executePageTransition = (
         return result instanceof Promise ? result : Promise.resolve();
     }
 
+    // Save scroll position before forward navigation for later restoration
+    const isBack = options?.direction === 'back';
+    if (!isBack) {
+        pushScrollPosition();
+    }
+
     // Determine animation classes based on options
     const classesToAdd = resolveTransitionClasses(options);
 
@@ -151,12 +158,34 @@ export const executePageTransition = (
     // Apply per-navigation customization (duration/easing overrides)
     applyCustomization(options?.customization);
 
-    // Start view transition (safe: guarded by isViewTransitionSupported() above)
-    const viewTransition = document.startViewTransition!(() => navigationFn());
+    try {
+        // Start view transition (safe: guarded by isViewTransitionSupported() above)
+        const viewTransition = document.startViewTransition!(() => {
+            navigationFn();
 
-    // Remove all animation classes and customization after transition completes
-    return viewTransition.finished.finally(() => {
+            // Manage scroll position inside callback so snapshot captures correct state
+            if (isBack) {
+                const saved = popScrollPosition();
+                if (saved) {
+                    window.scrollTo(saved.x, saved.y);
+                }
+            } else {
+                window.scrollTo(0, 0);
+            }
+        });
+
+        // Remove all animation classes and customization after transition completes
+        return viewTransition.finished.finally(() => {
+            cleanupTransitionClasses();
+            cleanupCustomization();
+        });
+    } catch {
+        // Clean up orphaned scroll entry on error
+        if (!isBack) {
+            popScrollPosition();
+        }
         cleanupTransitionClasses();
         cleanupCustomization();
-    });
+        return Promise.resolve();
+    }
 };
