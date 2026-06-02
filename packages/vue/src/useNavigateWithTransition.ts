@@ -56,7 +56,7 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): {
     navigate: NavigateWithTransitionFn;
-    goBack: () => Promise<void>;
+    goBack: (options?: Pick<TransitionNavigateOptions, 'animation' | 'customization' | 'signal' | 'onSkipped'>) => Promise<void>;
 } => {
     const router = useRouter();
 
@@ -64,7 +64,15 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         to: RouteLocationRaw | number,
         options?: TransitionNavigateOptions
     ): Promise<void> => {
-        const { transition, direction, animation, replace, customization } = options ?? {};
+        const { transition, direction, animation, replace, customization, signal, onSkipped } = options ?? {};
+
+        // Honor an already-aborted signal even on the no-transition
+        // branch, so the consumer contract holds regardless of which
+        // path the call would have taken.
+        if (signal?.aborted) {
+            onSkipped?.('aborted');
+            return Promise.resolve();
+        }
 
         // replace: true defaults to no transition (tab bar navigation)
         // explicit transition: true/false overrides this behavior
@@ -105,12 +113,14 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
                 direction: resolvedDirection,
                 config,
                 customization,
+                signal,
+                onSkipped,
             }
         );
     };
 
-    const goBack = (): Promise<void> => {
-        return navigate(-1);
+    const goBack = (options?: Pick<TransitionNavigateOptions, 'animation' | 'customization' | 'signal' | 'onSkipped'>): Promise<void> => {
+        return navigate(-1, options);
     };
 
     return {

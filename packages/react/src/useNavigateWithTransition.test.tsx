@@ -277,6 +277,139 @@ describe('useNavigateWithTransition', () => {
         });
     });
 
+    describe('signal + onSkipped', () => {
+        it('skips navigation entirely when signal is already aborted', () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const controller = new AbortController();
+            controller.abort();
+            const onSkipped = vi.fn();
+
+            act(() => {
+                result.current('/aborted', { signal: controller.signal, onSkipped });
+            });
+
+            expect(document.startViewTransition).not.toHaveBeenCalled();
+            expect(onSkipped).toHaveBeenCalledWith('aborted');
+        });
+
+        it('fires onSkipped("animation-none") when animation is "none"', () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const onSkipped = vi.fn();
+
+            act(() => {
+                result.current('/instant', { animation: 'none', onSkipped });
+            });
+
+            expect(onSkipped).toHaveBeenCalledWith('animation-none');
+        });
+
+        it('fires onSkipped("reduced-motion") when prefers-reduced-motion is set', () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const onSkipped = vi.fn();
+            const originalMatchMedia = window.matchMedia;
+            window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as typeof window.matchMedia;
+
+            act(() => {
+                result.current('/page', { onSkipped });
+            });
+
+            expect(document.startViewTransition).not.toHaveBeenCalled();
+            expect(onSkipped).toHaveBeenCalledWith('reduced-motion');
+
+            window.matchMedia = originalMatchMedia;
+        });
+    });
+
+    describe('concurrent navigation dedup', () => {
+        it('skipTransition() previous in-flight transition and notifies its onSkipped("superseded")', async () => {
+            // Hold the first transition open so the second call supersedes it.
+            const skipFirst = vi.fn();
+            let resolveFirst!: () => void;
+            const firstFinished = new Promise<void>((r) => {
+                resolveFirst = r;
+            });
+            (document.startViewTransition as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+                (cb: () => void) => {
+                    cb();
+                    return {
+                        finished: firstFinished,
+                        ready: Promise.resolve(),
+                        updateCallbackDone: Promise.resolve(),
+                        skipTransition: skipFirst,
+                    };
+                }
+            );
+
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const firstOnSkipped = vi.fn();
+
+            act(() => {
+                result.current('/first', { onSkipped: firstOnSkipped });
+            });
+
+            act(() => {
+                result.current('/second');
+            });
+
+            expect(skipFirst).toHaveBeenCalledTimes(1);
+            expect(firstOnSkipped).toHaveBeenCalledWith('superseded');
+
+            resolveFirst();
+        });
+    });
+
+    describe('async onSkipped resilience', () => {
+        it('swallows a rejected Promise from onSkipped without crashing', async () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const onSkipped = vi.fn(() => Promise.reject(new Error('analytics down')));
+            const unhandled = vi.fn();
+            process.on('unhandledRejection', unhandled);
+
+            await act(async () => {
+                await result.current('/x', { animation: 'none', onSkipped });
+            });
+
+            // Give the rejection a microtask to surface if uncaught.
+            await new Promise((r) => setTimeout(r, 0));
+
+            expect(onSkipped).toHaveBeenCalledWith('animation-none');
+            expect(unhandled).not.toHaveBeenCalled();
+            process.off('unhandledRejection', unhandled);
+        });
+    });
+
+    describe('aborted signal on non-transition branch', () => {
+        it('respects signal.aborted when transition is disabled', () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+            const controller = new AbortController();
+            controller.abort();
+            const onSkipped = vi.fn();
+
+            act(() => {
+                result.current('/x', {
+                    replace: true, // would normally skip transition silently
+                    signal: controller.signal,
+                    onSkipped,
+                });
+            });
+
+            expect(onSkipped).toHaveBeenCalledWith('aborted');
+            // navigate is not called when signal is already aborted.
+        });
+    });
+
+    describe('legacyFlushSync', () => {
+        it('still triggers View Transitions and ends up at target route', () => {
+            const { result } = renderHook(() => useNavigateWithTransition(), { wrapper });
+
+            act(() => {
+                result.current('/legacy', { legacyFlushSync: true });
+            });
+
+            expect(document.startViewTransition).toHaveBeenCalled();
+        });
+    });
+
     // Config stability test
     describe('config stability', () => {
         it('should not cause re-renders when config object reference changes but values are same', () => {

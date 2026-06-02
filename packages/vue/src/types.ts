@@ -1,6 +1,11 @@
 import type { RouteLocationRaw } from 'vue-router';
 
-import type { AnimationType, NavigationDirection, TransitionCustomization } from '@lemoncloud/page-transition-core';
+import type {
+    AnimationType,
+    NavigationDirection,
+    SkipReason,
+    TransitionCustomization,
+} from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
 export interface TransitionNavigateOptions {
@@ -84,6 +89,18 @@ export interface TransitionNavigateOptions {
      * ```
      */
     customization?: TransitionCustomization;
+
+    /**
+     * Caller-driven cancellation. Aborting before the navigation runs
+     * skips the navigate call entirely. Aborting mid-flight skips the
+     * View Transitions animation.
+     */
+    signal?: AbortSignal;
+
+    /**
+     * Notified when the navigation completes without animation.
+     */
+    onSkipped?: (reason: SkipReason) => void;
 }
 
 /** Navigate function with view transition support (returns Promise) */

@@ -3,34 +3,39 @@ import { useCallback } from 'react';
 import { useNavigateWithTransition } from './useNavigateWithTransition';
 
 import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
+import type { TransitionNavigateOptions } from './types';
+
+export type GoBackOptions = Pick<
+    TransitionNavigateOptions,
+    'animation' | 'customization' | 'signal' | 'onSkipped' | 'legacyFlushSync'
+>;
 
 /**
- * Convenience hook for back navigation with transition.
- *
- * @param config - Optional configuration for platform-specific animations
- * @returns Callback function to navigate back (returns Promise)
+ * Convenience hook for back navigation with transition. Optional
+ * options forward to the underlying `useNavigateWithTransition`
+ * — useful for canceling in-flight back gestures, observing skip
+ * reasons, or overriding the animation type.
  *
  * @example
  * ```tsx
  * const goBack = useGoBack();
+ * <button onClick={() => goBack()}>Back</button>
  *
- * // In JSX
- * <button onClick={goBack}>Back</button>
+ * // Cancel an in-flight back navigation
+ * const controller = new AbortController();
+ * goBack({ signal: controller.signal });
  *
- * // With custom platform
- * const goBack = useGoBack({ platform: 'ios' });
- *
- * // Await transition completion
- * const handleBack = async () => {
- *   await goBack();
- *   console.log('Back transition complete!');
- * };
+ * // Debug why an animation was skipped
+ * goBack({ onSkipped: (reason) => console.warn(reason) });
  * ```
  */
-export const useGoBack = (config?: PageTransitionConfig): (() => Promise<void>) => {
+export const useGoBack = (config?: PageTransitionConfig): ((options?: GoBackOptions) => Promise<void>) => {
     const navigate = useNavigateWithTransition(config);
 
-    return useCallback(() => {
-        return navigate(-1);
-    }, [navigate]);
+    return useCallback(
+        (options?: GoBackOptions) => {
+            return navigate(-1, options);
+        },
+        [navigate]
+    );
 };
