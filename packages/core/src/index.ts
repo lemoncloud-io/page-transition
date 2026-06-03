@@ -24,6 +24,9 @@ export {
     ANIMATION_CLASSES,
 } from './constants';
 
+// Reduced motion helper
+export { isReducedMotion } from './reduced-motion';
+
 // Types
 export type {
     PlatformType,
@@ -32,6 +35,7 @@ export type {
     PageTransitionConfig,
     TransitionCustomization,
     TransitionOptions,
+    SkipReason,
     ViewTransition,
     ViewTransitionCallback,
 } from './types';

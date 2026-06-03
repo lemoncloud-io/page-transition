@@ -50,12 +50,32 @@ const navigate = useNavigateWithTransition({
 
 ```ts
 navigate('/path', {
-    transition: true,       // Enable animation (default: true)
-    direction: 'forward',   // 'forward' | 'back'
-    animation: 'slide',     // 'slide' | 'lift' | 'fade' | 'zoom' | 'none'
-    replace: false          // Replace history (disables transition by default)
+    transition: true,         // Enable animation (default: true)
+    direction: 'forward',     // 'forward' | 'back'
+    animation: 'slide',       // 'slide' | 'lift' | 'fade' | 'zoom' | 'none'
+    replace: false,           // Replace history (disables transition by default)
+    signal: controller.signal, // AbortSignal — cancel an in-flight navigation
+    onSkipped: (reason) => {  // Notified when the animation was bypassed
+        // 'unsupported' | 'reduced-motion' | 'animation-none' | 'aborted' | 'superseded'
+    },
+    legacyFlushSync: false,   // @experimental — restore pre-v1 flushSync path
 });
 ```
+
+### Debugging missing animations
+
+If a navigation doesn't animate, attach `onSkipped` to find out why:
+
+```tsx
+navigate('/settings', {
+    onSkipped: (reason) => console.warn('page transition skipped:', reason),
+});
+```
+
+`'unsupported'` means the browser lacks the View Transitions API,
+`'reduced-motion'` means the user opted out via OS settings,
+`'superseded'` means a newer call replaced this one, and
+`'aborted'` means the consumer-provided `AbortSignal` fired.
 
 ### Examples
 

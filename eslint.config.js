@@ -25,6 +25,12 @@ export default [
                 navigator: 'readonly',
                 console: 'readonly',
                 global: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                queueMicrotask: 'readonly',
+                AbortController: 'readonly',
+                AbortSignal: 'readonly',
+                process: 'readonly',
             },
         },
         plugins: {

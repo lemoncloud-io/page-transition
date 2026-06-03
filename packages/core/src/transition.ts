@@ -8,16 +8,18 @@ import {
     BACK_NAVIGATION_CLASS,
 } from './constants';
 import { resolvePlatform } from './platform';
+import { isReducedMotion } from './reduced-motion';
 import { popScrollPosition, pushScrollPosition } from './scroll';
+import { claimTransition, getCurrentEntry, releaseTransition } from './transition-state';
 
-import type { AnimationType, TransitionCustomization, TransitionOptions } from './types';
+import type {
+    AnimationType,
+    SkipReason,
+    TransitionCustomization,
+    TransitionOptions,
+    ViewTransition,
+} from './types';
 
-/**
- * Resolves CSS classes to add based on transition options.
- *
- * @param options - Transition options
- * @returns Array of CSS class names to add
- */
 const ANIMATION_CLASS_MAP: Record<Exclude<AnimationType, 'none'>, string> = {
     fade: ANIMATION_FADE_CLASS,
     zoom: ANIMATION_ZOOM_CLASS,
@@ -28,18 +30,15 @@ const ANIMATION_CLASS_MAP: Record<Exclude<AnimationType, 'none'>, string> = {
 export const resolveTransitionClasses = (options?: TransitionOptions): string[] => {
     const classesToAdd: string[] = [];
 
-    // Animation type handling
     if (options?.animation && options.animation !== 'none') {
         classesToAdd.push(ANIMATION_CLASS_MAP[options.animation]);
     } else if (!options?.animation) {
-        // Use platform-based animation (default behavior)
         const platform = resolvePlatform(options?.config);
         if (platform === 'android') {
             classesToAdd.push(ANDROID_PLATFORM_CLASS);
         }
     }
 
-    // Direction handling
     if (options?.direction === 'back') {
         classesToAdd.push(BACK_NAVIGATION_CLASS);
     }
@@ -47,21 +46,14 @@ export const resolveTransitionClasses = (options?: TransitionOptions): string[] 
     return classesToAdd;
 };
 
-/**
- * Cleans up all animation-related CSS classes from the document element.
- */
 export const cleanupTransitionClasses = (): void => {
+    if (typeof document === 'undefined') return;
     ANIMATION_CLASSES.forEach(cls => document.documentElement.classList.remove(cls));
 };
 
 const DURATION_OVERRIDE_PROPERTY = '--pt-duration-override';
 const EASING_OVERRIDE_PROPERTY = '--pt-easing-override';
 
-/**
- * Applies per-navigation customization as CSS custom property overrides.
- * These override the animation-specific variables (e.g., --pt-slide-duration)
- * and are cleaned up after the transition completes.
- */
 const applyCustomization = (customization?: TransitionCustomization): void => {
     if (!customization) return;
     const root = document.documentElement;
@@ -73,119 +65,190 @@ const applyCustomization = (customization?: TransitionCustomization): void => {
     }
 };
 
-/**
- * Removes per-navigation customization CSS custom properties.
- */
 const cleanupCustomization = (): void => {
+    if (typeof document === 'undefined') return;
     const root = document.documentElement;
     root.style.removeProperty(DURATION_OVERRIDE_PROPERTY);
     root.style.removeProperty(EASING_OVERRIDE_PROPERTY);
 };
 
+type StartViewTransition = (callback: () => void | Promise<void>) => ViewTransition;
+
+const getStartViewTransition = (): StartViewTransition | undefined => {
+    if (typeof document === 'undefined') return undefined;
+    const fn = document.startViewTransition;
+    return typeof fn === 'function' ? fn.bind(document) : undefined;
+};
+
 /**
  * Checks if the View Transitions API is supported in the current browser.
- *
- * @returns true if startViewTransition is available
  */
 export const isViewTransitionSupported = (): boolean => {
-    return typeof document !== 'undefined' && typeof document.startViewTransition === 'function';
+    return getStartViewTransition() !== undefined;
+};
+
+const runNavigation = async (navigationFn: () => void | Promise<void>): Promise<void> => {
+    const result = navigationFn();
+    if (result instanceof Promise) await result;
+};
+
+/**
+ * Invokes a consumer callback that may be sync, async, or throw either
+ * synchronously or via a rejected Promise. All paths are swallowed —
+ * an unhandled `onSkipped` rejection must not crash the navigation.
+ */
+const safeInvoke = (fn: ((reason: SkipReason) => void | Promise<unknown>) | undefined, reason: SkipReason): void => {
+    if (!fn) return;
+    try {
+        const result = fn(reason);
+        if (result && typeof (result as Promise<unknown>).catch === 'function') {
+            (result as Promise<unknown>).catch(() => {
+                /* swallow async rejection from consumer callback */
+            });
+        }
+    } catch {
+        /* swallow sync throw from consumer callback */
+    }
+};
+
+const notifySkipped = (options: TransitionOptions | undefined, reason: SkipReason): void => {
+    safeInvoke(options?.onSkipped, reason);
+};
+
+const handleBackScroll = (): void => {
+    const saved = popScrollPosition();
+    if (saved) {
+        window.scrollTo(saved.x, saved.y);
+    }
+};
+
+const setupAnimationState = (options: TransitionOptions | undefined): void => {
+    const classesToAdd = resolveTransitionClasses(options);
+    classesToAdd.forEach(cls => document.documentElement.classList.add(cls));
+    applyCustomization(options?.customization);
+};
+
+const teardownAnimationState = (): void => {
+    cleanupTransitionClasses();
+    cleanupCustomization();
+};
+
+const shortCircuit = async (
+    navigationFn: () => void | Promise<void>,
+    options: TransitionOptions | undefined,
+    reason: SkipReason
+): Promise<void> => {
+    notifySkipped(options, reason);
+    await runNavigation(navigationFn);
 };
 
 /**
  * Executes a page transition using the View Transitions API.
  *
- * This is the core framework-agnostic function that handles:
- * 1. Browser support detection
- * 2. CSS class management for animations
- * 3. View Transition execution
- * 4. Cleanup after transition
- *
- * @param navigationFn - Function that performs the actual navigation/DOM update
- * @param options - Transition options (animation type, direction, platform config)
- * @returns Promise that resolves when the transition completes
- *
- * @example
- * ```ts
- * // Basic usage with any router
- * await executePageTransition(() => {
- *   router.push('/new-page');
- * });
- *
- * // With back animation
- * await executePageTransition(() => {
- *   router.back();
- * }, { direction: 'back' });
- *
- * // With fade animation
- * await executePageTransition(() => {
- *   router.push('/modal');
- * }, { animation: 'fade' });
- *
- * // Force Android-style animation
- * await executePageTransition(() => {
- *   router.push('/page');
- * }, { config: { platform: 'android' } });
- * ```
+ * Behavior:
+ * 1. Skips the animation (calling `onSkipped`) when unsupported, when
+ *    the user prefers reduced motion, when `animation: 'none'`, or
+ *    when the caller aborts.
+ * 2. If a transition is already in flight, the previous one is
+ *    `skipTransition()`-ed before the new one starts. The previous
+ *    caller is notified via its `onSkipped('superseded')`.
+ * 3. `navigationFn` is awaited inside the View Transitions callback,
+ *    so async routers (Promise-returning navigate) snapshot the
+ *    correct DOM.
  */
-export const executePageTransition = (
+export const executePageTransition = async (
     navigationFn: () => void | Promise<void>,
     options?: TransitionOptions
 ): Promise<void> => {
-    // Skip transition if not supported
-    if (!isViewTransitionSupported()) {
-        const result = navigationFn();
-        return result instanceof Promise ? result : Promise.resolve();
+    if (options?.signal?.aborted) {
+        notifySkipped(options, 'aborted');
+        return;
     }
 
-    // Handle 'none' animation type - instant navigation without transition
     if (options?.animation === 'none') {
-        const result = navigationFn();
-        return result instanceof Promise ? result : Promise.resolve();
+        return shortCircuit(navigationFn, options, 'animation-none');
     }
 
-    // Save scroll position before forward navigation for later restoration
+    const startViewTransition = getStartViewTransition();
+    if (!startViewTransition) {
+        return shortCircuit(navigationFn, options, 'unsupported');
+    }
+
+    if (isReducedMotion()) {
+        return shortCircuit(navigationFn, options, 'reduced-motion');
+    }
+
+    supersedePreviousTransition();
+
     const isBack = options?.direction === 'back';
-    if (!isBack) {
-        pushScrollPosition();
-    }
+    if (!isBack) pushScrollPosition();
 
-    // Determine animation classes based on options
-    const classesToAdd = resolveTransitionClasses(options);
+    setupAnimationState(options);
 
-    // Add all classes
-    classesToAdd.forEach(cls => document.documentElement.classList.add(cls));
+    let scrollEntryConsumed = false;
+    const consumeScrollEntry = (): void => {
+        if (scrollEntryConsumed || isBack) return;
+        scrollEntryConsumed = true;
+        popScrollPosition();
+    };
 
-    // Apply per-navigation customization (duration/easing overrides)
-    applyCustomization(options?.customization);
-
+    let viewTransition: ViewTransition;
     try {
-        // Start view transition (safe: guarded by isViewTransitionSupported() above)
-        const viewTransition = document.startViewTransition!(() => {
-            navigationFn();
-
-            // Manage scroll position inside callback so snapshot captures correct state
+        viewTransition = startViewTransition(async () => {
+            try {
+                await runNavigation(navigationFn);
+            } catch (err) {
+                // Callback threw — pop the entry we pushed before
+                // `startViewTransition` so the scroll store stays
+                // balanced. Re-throw so `viewTransition.finished`
+                // rejects and the outer finally cleans up the rest.
+                consumeScrollEntry();
+                throw err;
+            }
             if (isBack) {
-                const saved = popScrollPosition();
-                if (saved) {
-                    window.scrollTo(saved.x, saved.y);
-                }
+                handleBackScroll();
             } else {
                 window.scrollTo(0, 0);
             }
         });
-
-        // Remove all animation classes and customization after transition completes
-        return viewTransition.finished.finally(() => {
-            cleanupTransitionClasses();
-            cleanupCustomization();
-        });
     } catch {
-        // Clean up orphaned scroll entry on error
-        if (!isBack) {
-            popScrollPosition();
-        }
-        cleanupTransitionClasses();
-        cleanupCustomization();
-        return Promise.resolve();
+        consumeScrollEntry();
+        teardownAnimationState();
+        return;
     }
+
+    claimTransition({ vt: viewTransition, onSkipped: options?.onSkipped });
+
+    const onAbort = (): void => {
+        try {
+            viewTransition.skipTransition();
+        } catch {
+            // Ignore — transition may already be done.
+        }
+        notifySkipped(options, 'aborted');
+    };
+    options?.signal?.addEventListener('abort', onAbort, { once: true });
+
+    try {
+        await viewTransition.finished;
+    } catch {
+        // Swallow — finished can reject if the transition was skipped
+        // or if the callback threw. Scroll pop is handled inside the
+        // callback's own catch above.
+    } finally {
+        options?.signal?.removeEventListener('abort', onAbort);
+        teardownAnimationState();
+        releaseTransition(viewTransition);
+    }
+};
+
+const supersedePreviousTransition = (): void => {
+    const previous = getCurrentEntry();
+    if (!previous) return;
+    try {
+        previous.vt.skipTransition();
+    } catch {
+        // Browsers may throw if the previous transition already settled.
+    }
+    safeInvoke(previous.onSkipped, 'superseded');
 };

@@ -1,6 +1,11 @@
 import type { NavigateOptions, To } from 'react-router-dom';
 
-import type { AnimationType, NavigationDirection, TransitionCustomization } from '@lemoncloud/page-transition-core';
+import type {
+    AnimationType,
+    NavigationDirection,
+    SkipReason,
+    TransitionCustomization,
+} from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
 export interface TransitionNavigateOptions extends NavigateOptions {
@@ -67,6 +72,30 @@ export interface TransitionNavigateOptions extends NavigateOptions {
      * ```
      */
     customization?: TransitionCustomization;
+
+    /**
+     * Caller-driven cancellation. Aborting before the navigation runs
+     * skips the navigate call entirely. Aborting mid-flight skips the
+     * View Transitions animation.
+     */
+    signal?: AbortSignal;
+
+    /**
+     * Notified when the navigation completes without an animation
+     * (unsupported browser, reduced-motion, `animation: 'none'`,
+     * aborted, or superseded by a newer call).
+     */
+    onSkipped?: (reason: SkipReason) => void;
+
+    /**
+     * @experimental Forces the legacy `flushSync` path used in
+     * pre-v1.x releases. The default is now to let React Router
+     * commit asynchronously inside the View Transitions callback,
+     * which the API natively awaits. Set this to `true` only if you
+     * hit a regression in a specific React Router version. Slated for
+     * removal in v2.0.
+     */
+    legacyFlushSync?: boolean;
 }
 
 /** Navigate function with view transition support (returns Promise) */

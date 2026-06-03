@@ -42,6 +42,18 @@ export interface TransitionCustomization {
     easing?: string;
 }
 
+/**
+ * Why a navigation skipped the View Transitions animation. Surfaced
+ * via `TransitionOptions.onSkipped` so consumers can debug missing
+ * animations or feed metrics.
+ */
+export type SkipReason =
+    | 'unsupported'
+    | 'reduced-motion'
+    | 'animation-none'
+    | 'aborted'
+    | 'superseded';
+
 /** Options for executing a page transition */
 export interface TransitionOptions {
     /**
@@ -74,4 +86,18 @@ export interface TransitionOptions {
      * ```
      */
     customization?: TransitionCustomization;
+
+    /**
+     * Caller-driven cancellation. Aborting before the transition starts
+     * skips `navigationFn` entirely. Aborting mid-flight calls
+     * `ViewTransition.skipTransition()`.
+     */
+    signal?: AbortSignal;
+
+    /**
+     * Notified when the navigation completes without animation. Useful
+     * for analytics or surfacing "transition skipped" warnings while
+     * debugging.
+     */
+    onSkipped?: (reason: SkipReason) => void;
 }

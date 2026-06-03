@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
-import { executePageTransition, isViewTransitionSupported } from '@lemoncloud/page-transition-core';
+import { executePageTransition } from '@lemoncloud/page-transition-core';
 
 import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
 import type { To } from 'react-router-dom';
@@ -15,47 +15,26 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
  * - `replace: true` automatically disables transition (for tab bar navigation)
  * - Use `transition: true` explicitly to override this behavior
  * - Returns a Promise that resolves when the transition completes
+ * - Pass `signal` to abort an in-flight navigation
+ * - Pass `onSkipped` to observe why a transition was bypassed
  *
  * @param config - Optional configuration for platform-specific animations
  * @returns Navigate function with view transition support
  *
  * @example
  * ```tsx
- * // Auto-detect platform (default)
  * const navigate = useNavigateWithTransition();
- *
- * // Force iOS animations
- * const navigate = useNavigateWithTransition({ platform: 'ios' });
- *
- * // Custom platform detector
- * const navigate = useNavigateWithTransition({
- *   detectPlatform: () => myApp.isAndroid ? 'android' : 'ios'
- * });
- *
- * // Forward navigation with transition (default)
- * navigate('/settings');
- *
- * // Back navigation with transition
- * navigate(-1);
- *
- * // Navigate to path with back animation
- * navigate('/home', { direction: 'back' });
- *
- * // Modal with fade animation
- * navigate('/modal', { animation: 'fade' });
- *
- * // Gallery with zoom animation
- * navigate('/gallery/1', { animation: 'zoom' });
- *
- * // Navigation without transition (for tab switches)
- * navigate('/explore', { transition: false });
- *
- * // Replace navigation - no transition by default (tab bar)
- * navigate('/home', { replace: true });
- *
- * // Await transition completion
  * await navigate('/settings');
- * console.log('Transition complete!');
+ *
+ * // Cancel an in-flight navigation
+ * const controller = new AbortController();
+ * navigate('/slow', { signal: controller.signal });
+ * controller.abort();
+ *
+ * // Debug missing animations
+ * navigate('/page', {
+ *   onSkipped: (reason) => console.log('skipped:', reason),
+ * });
  * ```
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): NavigateWithTransitionFn => {
@@ -63,14 +42,29 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
 
     const navigateWithTransition = useCallback(
         (to: To | number, options?: TransitionNavigateOptions): Promise<void> => {
-            const { transition, direction, animation, customization, ...navigateOptions } = options ?? {};
+            const {
+                transition,
+                direction,
+                animation,
+                customization,
+                signal,
+                onSkipped,
+                legacyFlushSync,
+                ...navigateOptions
+            } = options ?? {};
 
-            // replace: true defaults to no transition (tab bar navigation)
-            // explicit transition: true/false overrides this behavior
+            // Honor an already-aborted signal even on the no-transition
+            // branch, so the consumer contract ("aborting before the
+            // navigation runs skips it entirely") holds regardless of
+            // whether the call would have animated.
+            if (signal?.aborted) {
+                onSkipped?.('aborted');
+                return Promise.resolve();
+            }
+
             const shouldTransition = transition ?? !navigateOptions.replace;
 
-            // Skip transition if not supported or disabled
-            if (!shouldTransition || !isViewTransitionSupported()) {
+            if (!shouldTransition) {
                 if (typeof to === 'number') {
                     navigate(to);
                 } else {
@@ -79,35 +73,42 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 return Promise.resolve();
             }
 
-            // Determine if this is a back navigation:
-            // 1. Explicit direction takes priority (overrides numeric detection)
-            // 2. Numeric negative navigation (e.g., -1) when direction not specified
+            const runNavigate = (): void => {
+                if (typeof to === 'number') {
+                    navigate(to);
+                } else {
+                    navigate(to, navigateOptions);
+                }
+            };
+
+            // Default: let React Router commit asynchronously inside the
+            // View Transitions callback (the API natively awaits the
+            // returned Promise). Falling back to `flushSync` is opt-in
+            // via `legacyFlushSync` so consumers can escape a regression
+            // without downgrading the library.
+            const navigationFn = legacyFlushSync
+                ? () => {
+                      flushSync(runNavigate);
+                  }
+                : async () => {
+                      runNavigate();
+                      await Promise.resolve();
+                  };
+
             const resolvedDirection = direction !== undefined
                 ? direction
                 : typeof to === 'number' && to < 0
                     ? 'back'
                     : 'forward';
 
-            // Execute navigation with transition
-            // flushSync ensures React renders synchronously so the View Transitions
-            // API captures the correct DOM state in its snapshot.
-            return executePageTransition(
-                () => {
-                    flushSync(() => {
-                        if (typeof to === 'number') {
-                            navigate(to);
-                        } else {
-                            navigate(to, navigateOptions);
-                        }
-                    });
-                },
-                {
-                    animation,
-                    direction: resolvedDirection,
-                    config,
-                    customization,
-                }
-            );
+            return executePageTransition(navigationFn, {
+                animation,
+                direction: resolvedDirection,
+                config,
+                customization,
+                signal,
+                onSkipped,
+            });
         },
         // Config values (platform, detectPlatform) are stable - only navigate reference matters
         // eslint-disable-next-line react-hooks/exhaustive-deps

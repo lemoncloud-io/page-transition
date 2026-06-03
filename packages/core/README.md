@@ -70,8 +70,27 @@ interface TransitionOptions {
         platform?: 'ios' | 'android' | 'auto';
         detectPlatform?: () => 'ios' | 'android' | undefined;
     };
+    customization?: { duration?: number; easing?: string };
+    /** Cancel a navigation. Aborting before start skips it entirely. */
+    signal?: AbortSignal;
+    /** Notified when an animation was bypassed. Useful for analytics / debugging. */
+    onSkipped?: (reason: SkipReason) => void;
 }
+
+type SkipReason =
+    | 'unsupported'
+    | 'reduced-motion'
+    | 'animation-none'
+    | 'aborted'
+    | 'superseded';
 ```
+
+Concurrent calls are deduped automatically — a new `executePageTransition`
+calls `skipTransition()` on any in-flight transition and notifies its
+caller via `onSkipped('superseded')`.
+
+The navigation callback may be `async`; the View Transitions API
+natively awaits it so async router commits stay snapshot-consistent.
 
 ### `isViewTransitionSupported()`
 
