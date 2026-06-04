@@ -19,8 +19,8 @@
 
 :root {
     /* iOS Slide */
-    --pt-slide-duration: 350ms;
-    --pt-slide-easing: cubic-bezier(0.32, 0.72, 0, 1);
+    --pt-slide-duration: 380ms;
+    --pt-slide-easing: cubic-bezier(0.32, 0.5, 0.05, 1);
 
     /* Android Lift (Material Design 3 SharedAxis Y) */
     --pt-lift-duration: 450ms;
