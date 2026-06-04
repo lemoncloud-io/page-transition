@@ -9,7 +9,7 @@ import {
 } from './constants';
 import { resolvePlatform } from './platform';
 import { isReducedMotion } from './reduced-motion';
-import { popScrollPosition, pushScrollPosition } from './scroll';
+import { applyScrollPosition, popScrollPosition, pushScrollPosition } from './scroll';
 import { claimTransition, getCurrentEntry, releaseTransition } from './transition-state';
 
 import type {
@@ -115,10 +115,16 @@ const notifySkipped = (options: TransitionOptions | undefined, reason: SkipReaso
     safeInvoke(options?.onSkipped, reason);
 };
 
-const handleBackScroll = (): void => {
+const resolveScrollRoot = (options?: TransitionOptions): Element | null => {
+    const root = options?.scrollRoot;
+    if (!root) return null;
+    return typeof root === 'function' ? root() : root;
+};
+
+const handleBackScroll = (root: Element | null): void => {
     const saved = popScrollPosition();
     if (saved) {
-        window.scrollTo(saved.x, saved.y);
+        applyScrollPosition(saved, root);
     }
 };
 
@@ -181,7 +187,8 @@ export const executePageTransition = async (
     supersedePreviousTransition();
 
     const isBack = options?.direction === 'back';
-    if (!isBack) pushScrollPosition();
+    const scrollRoot = resolveScrollRoot(options);
+    if (!isBack) pushScrollPosition(scrollRoot);
 
     setupAnimationState(options);
 
@@ -206,9 +213,9 @@ export const executePageTransition = async (
                 throw err;
             }
             if (isBack) {
-                handleBackScroll();
+                handleBackScroll(scrollRoot);
             } else {
-                window.scrollTo(0, 0);
+                applyScrollPosition({ x: 0, y: 0 }, scrollRoot);
             }
         });
     } catch {

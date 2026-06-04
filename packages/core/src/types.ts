@@ -74,6 +74,24 @@ export interface TransitionOptions {
     config?: PageTransitionConfig;
 
     /**
+     * Element that owns the scroll position for this navigation. When
+     * set, scroll save/restore targets this element
+     * (`scrollTop`/`scrollLeft`, `el.scrollTo`) instead of the window.
+     *
+     * Apps that move scrolling into a container — recommended inside iOS
+     * WebViews, where a scrolled *document* makes WebKit capture the
+     * `::view-transition-old(root)` snapshot from the top and flash the
+     * leaving page — pass the container here so the library manages
+     * restoration for them. The host must still keep the document itself
+     * unscrolled (e.g. `body { overflow: hidden }`); the library cannot do
+     * that part. See `docs/scrolling-and-view-transitions.md`.
+     *
+     * Accepts an element or a getter, resolved when the transition runs
+     * (the element may mount after the hook/composable is created).
+     */
+    scrollRoot?: Element | (() => Element | null);
+
+    /**
      * Per-navigation customization that overrides CSS custom properties.
      * Useful for one-off timing adjustments without changing global CSS variables.
      *

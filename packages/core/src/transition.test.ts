@@ -159,3 +159,68 @@ describe('executePageTransition — async onSkipped resilience', () => {
         process.off('unhandledRejection', unhandled);
     });
 });
+
+describe('executePageTransition — scrollRoot', () => {
+    beforeEach(() => {
+        __resetTransitionState();
+        clearScrollStack();
+        window.history.replaceState({ key: 'sr-key' }, '', '/sr');
+        installStartViewTransition((cb) => {
+            const result = cb();
+            const vt = fakeVT();
+            if (result && typeof (result as Promise<void>).then === 'function') {
+                vt.finished = (result as Promise<void>).then(
+                    () => undefined,
+                    () => undefined,
+                );
+            }
+            return vt;
+        });
+    });
+
+    afterEach(() => {
+        uninstallStartViewTransition();
+    });
+
+    const makeContainer = () => {
+        const el = document.createElement('div');
+        Object.defineProperty(el, 'scrollLeft', { configurable: true, value: 0 });
+        Object.defineProperty(el, 'scrollTop', { configurable: true, value: 0 });
+        el.scrollTo = vi.fn();
+        return el;
+    };
+
+    it('resets the container (not the window) to top on forward navigation', async () => {
+        const el = makeContainer();
+        const windowScrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+        await executePageTransition(() => undefined, { direction: 'forward', scrollRoot: el });
+
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 0);
+        expect(windowScrollTo).not.toHaveBeenCalled();
+        windowScrollTo.mockRestore();
+    });
+
+    it('accepts a getter form resolved at transition time', async () => {
+        const el = makeContainer();
+
+        await executePageTransition(() => undefined, {
+            direction: 'forward',
+            scrollRoot: () => el,
+        });
+
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('restores the saved container offset on back navigation', async () => {
+        const el = makeContainer();
+        // Seed a saved position for the current history key.
+        Object.defineProperty(el, 'scrollTop', { configurable: true, value: 275 });
+        await executePageTransition(() => undefined, { direction: 'forward', scrollRoot: el });
+        (el.scrollTo as ReturnType<typeof vi.fn>).mockClear();
+
+        await executePageTransition(() => undefined, { direction: 'back', scrollRoot: el });
+
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 275);
+    });
+});

@@ -50,6 +50,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 signal,
                 onSkipped,
                 legacyFlushSync,
+                scrollRoot,
                 ...navigateOptions
             } = options ?? {};
 
@@ -108,6 +109,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 customization,
                 signal,
                 onSkipped,
+                scrollRoot,
             });
         },
         // Config values (platform, detectPlatform) are stable - only navigate reference matters

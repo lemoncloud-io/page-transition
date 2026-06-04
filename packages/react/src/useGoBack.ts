@@ -7,7 +7,7 @@ import type { TransitionNavigateOptions } from './types';
 
 export type GoBackOptions = Pick<
     TransitionNavigateOptions,
-    'animation' | 'customization' | 'signal' | 'onSkipped' | 'legacyFlushSync'
+    'animation' | 'customization' | 'signal' | 'onSkipped' | 'legacyFlushSync' | 'scrollRoot'
 >;
 
 /**
