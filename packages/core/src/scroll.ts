@@ -23,11 +23,25 @@ export interface ScrollPosition {
 const DEFAULT_MAX_ENTRIES = 50;
 
 interface ScrollStore {
-    save: () => void;
+    save: (pos: ScrollPosition) => void;
     restore: () => ScrollPosition | undefined;
     clear: () => void;
     size: () => number;
 }
+
+/** Reads the current scroll offset from a container element, or the window. */
+export const readScrollPosition = (root?: Element | null): ScrollPosition =>
+    root ? { x: root.scrollLeft, y: root.scrollTop } : { x: window.scrollX, y: window.scrollY };
+
+/** Applies a scroll offset to a container element, or the window. */
+export const applyScrollPosition = (pos: ScrollPosition, root?: Element | null): void => {
+    if (typeof window === 'undefined') return;
+    if (root) {
+        root.scrollTo(pos.x, pos.y);
+    } else {
+        window.scrollTo(pos.x, pos.y);
+    }
+};
 
 const currentKey = (): string => {
     if (typeof window === 'undefined') return '__ssr__';
@@ -47,12 +61,11 @@ const createScrollStore = (maxEntries: number = DEFAULT_MAX_ENTRIES): ScrollStor
     };
 
     return {
-        save: (): void => {
-            if (typeof window === 'undefined') return;
+        save: (pos: ScrollPosition): void => {
             const key = currentKey();
             // Re-insert to mark as most recent for LRU eviction.
             positions.delete(key);
-            positions.set(key, { x: window.scrollX, y: window.scrollY });
+            positions.set(key, pos);
             evictIfFull();
         },
         restore: (): ScrollPosition | undefined => {
@@ -72,12 +85,16 @@ const createScrollStore = (maxEntries: number = DEFAULT_MAX_ENTRIES): ScrollStor
 const defaultStore = createScrollStore();
 
 /**
- * @deprecated Use `TransitionOptions.direction` and let the lib manage
+ * Saves the current scroll offset for the active history entry. Reads
+ * from `root` when provided (a scroll container), otherwise the window.
+ *
+ * @deprecated Use `TransitionOptions.scrollRoot` and let the lib manage
  * scroll restoration. Direct calls remain functional but the global
  * default store will be removed in v2.0.
  */
-export const pushScrollPosition = (): void => {
-    defaultStore.save();
+export const pushScrollPosition = (root?: Element | null): void => {
+    if (typeof window === 'undefined') return;
+    defaultStore.save(readScrollPosition(root));
 };
 
 /**

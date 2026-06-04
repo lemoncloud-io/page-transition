@@ -96,6 +96,16 @@ export interface TransitionNavigateOptions extends NavigateOptions {
      * removal in v2.0.
      */
     legacyFlushSync?: boolean;
+
+    /**
+     * Element that owns the scroll position when the app scrolls a
+     * container instead of the document. Scroll save/restore then targets
+     * this element instead of the window. Recommended inside iOS WebViews
+     * (the host must also keep the document unscrolled via CSS). Accepts an
+     * element or a getter resolved at call time. See
+     * `docs/scrolling-and-view-transitions.md`.
+     */
+    scrollRoot?: Element | (() => Element | null);
 }
 
 /** Navigate function with view transition support (returns Promise) */

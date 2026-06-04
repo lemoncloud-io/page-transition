@@ -4,6 +4,8 @@ import {
     pushScrollPosition,
     popScrollPosition,
     clearScrollStack,
+    readScrollPosition,
+    applyScrollPosition,
     __defaultScrollStoreForTest,
 } from './scroll';
 
@@ -71,5 +73,43 @@ describe('scroll store (location-key)', () => {
         expect(popScrollPosition()).toBeUndefined();
 
         vi.stubGlobal('window', original);
+    });
+});
+
+describe('scroll root (container scrolling)', () => {
+    beforeEach(() => {
+        clearScrollStack();
+        window.history.replaceState({ key: 'root-key' }, '', '/root');
+    });
+
+    const makeContainer = (scrollLeft: number, scrollTop: number) => {
+        const el = document.createElement('div');
+        Object.defineProperty(el, 'scrollLeft', { configurable: true, value: scrollLeft });
+        Object.defineProperty(el, 'scrollTop', { configurable: true, value: scrollTop });
+        el.scrollTo = vi.fn();
+        return el;
+    };
+
+    it('readScrollPosition reads from the container when given a root', () => {
+        const el = makeContainer(7, 240);
+        expect(readScrollPosition(el)).toEqual({ x: 7, y: 240 });
+    });
+
+    it('readScrollPosition falls back to the window without a root', () => {
+        Object.defineProperty(window, 'scrollX', { configurable: true, value: 3 });
+        Object.defineProperty(window, 'scrollY', { configurable: true, value: 42 });
+        expect(readScrollPosition()).toEqual({ x: 3, y: 42 });
+    });
+
+    it('applyScrollPosition scrolls the container when given a root', () => {
+        const el = makeContainer(0, 0);
+        applyScrollPosition({ x: 0, y: 180 }, el);
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 180);
+    });
+
+    it('pushScrollPosition saves the container offset and pops it back', () => {
+        const el = makeContainer(0, 360);
+        pushScrollPosition(el);
+        expect(popScrollPosition()).toEqual({ x: 0, y: 360 });
     });
 });
