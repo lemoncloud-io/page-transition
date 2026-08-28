@@ -51,6 +51,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 onSkipped,
                 legacyFlushSync,
                 scrollRoot,
+                delta,
                 ...navigateOptions
             } = options ?? {};
 
@@ -102,9 +103,14 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                     ? 'back'
                     : 'forward';
 
+            // Only a backward hop names an entry that can already hold a
+            // saved offset; anything else must resolve to 0.
+            const resolvedDelta = delta ?? (typeof to === 'number' && to < 0 ? to : 0);
+
             return executePageTransition(navigationFn, {
                 animation,
                 direction: resolvedDirection,
+                delta: resolvedDelta,
                 config,
                 customization,
                 signal,

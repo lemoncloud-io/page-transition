@@ -111,6 +111,14 @@ export interface TransitionNavigateOptions {
      * `docs/scrolling-and-view-transitions.md`.
      */
     scrollRoot?: Element | (() => Element | null);
+
+    /**
+     * History hop count, derived from a *backward* numeric `to`
+     * (`navigate(-1)` → `-1`); a path navigation or a forward hop resolves
+     * to `0`. Only worth setting when you drive history yourself — see
+     * `TransitionOptions.delta` in the core package for what it is for.
+     */
+    delta?: number;
 }
 
 /** Navigate function with view transition support (returns Promise) */

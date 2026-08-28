@@ -212,15 +212,65 @@ describe('executePageTransition — scrollRoot', () => {
         expect(el.scrollTo).toHaveBeenCalledWith(0, 0);
     });
 
-    it('restores the saved container offset on back navigation', async () => {
+    const enterEntry = (idx: number): void => {
+        window.history.replaceState({ key: `sr-${idx}`, idx }, '', `/sr-${idx}`);
+    };
+
+    /**
+     * Saves `scrollTop` against entry 0, then moves to entry 1 — the state a
+     * back transition actually reads the store in, and the one the old
+     * single-key fixture could not express.
+     */
+    const seedEntryToReturnTo = async (scrollTop: number): Promise<Element> => {
         const el = makeContainer();
-        // Seed a saved position for the current history key.
-        Object.defineProperty(el, 'scrollTop', { configurable: true, value: 275 });
+        Object.defineProperty(el, 'scrollTop', { configurable: true, value: scrollTop });
+        enterEntry(0);
         await executePageTransition(() => undefined, { direction: 'forward', scrollRoot: el });
+
+        enterEntry(1);
         (el.scrollTo as ReturnType<typeof vi.fn>).mockClear();
+        return el;
+    };
+
+    it('restores the saved container offset across a real history entry change', async () => {
+        const el = await seedEntryToReturnTo(275);
+
+        await executePageTransition(() => undefined, { direction: 'back', delta: -1, scrollRoot: el });
+
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 275);
+    });
+
+    it('defaults to one entry back when direction is "back" and no delta is given', async () => {
+        const el = await seedEntryToReturnTo(130);
 
         await executePageTransition(() => undefined, { direction: 'back', scrollRoot: el });
 
-        expect(el.scrollTo).toHaveBeenCalledWith(0, 275);
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 130);
+    });
+
+    it('does not restore a stale offset for a push that only animates as back', async () => {
+        const el = await seedEntryToReturnTo(640);
+
+        await executePageTransition(() => undefined, { direction: 'back', delta: 0, scrollRoot: el });
+
+        expect(el.scrollTo).not.toHaveBeenCalledWith(0, 640);
+    });
+
+    it('discards the entry it saved when the navigation throws after committing', async () => {
+        const el = makeContainer();
+        Object.defineProperty(el, 'scrollTop', { configurable: true, value: 480 });
+        enterEntry(0);
+
+        await executePageTransition(
+            () => {
+                // React Router pushes synchronously, then something downstream
+                // fails — the rollback must still name the entry it saved.
+                enterEntry(1);
+                throw new Error('navigation failed');
+            },
+            { direction: 'forward', scrollRoot: el },
+        );
+
+        expect(__defaultScrollStoreForTest.size()).toBe(0);
     });
 });

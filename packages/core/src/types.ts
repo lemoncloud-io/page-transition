@@ -92,6 +92,22 @@ export interface TransitionOptions {
     scrollRoot?: Element | (() => Element | null);
 
     /**
+     * How many history entries this navigation moves, as passed to
+     * `history.go()` — `-1` for a single step back, `-2` for two.
+     *
+     * `history.go()` is asynchronous, so while the View Transitions
+     * callback runs, `history.state` still describes the entry being
+     * left. The delta is what locates the destination entry's saved
+     * scroll offset without waiting for the pop to settle.
+     *
+     * Defaults to `-1` when `direction` is `'back'`, `0` otherwise. Pass
+     * `0` explicitly for a push navigation that merely *animates* as a
+     * back navigation (`direction: 'back'` on a path), so no stale offset
+     * is restored onto the new page.
+     */
+    delta?: number;
+
+    /**
      * Per-navigation customization that overrides CSS custom properties.
      * Useful for one-off timing adjustments without changing global CSS variables.
      *

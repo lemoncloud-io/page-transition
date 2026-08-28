@@ -9,7 +9,7 @@ import {
 } from './constants';
 import { resolvePlatform } from './platform';
 import { isReducedMotion } from './reduced-motion';
-import { applyScrollPosition, popScrollPosition, pushScrollPosition } from './scroll';
+import { applyScrollPosition, discardScrollPosition, peekScrollPosition, saveScrollPosition } from './scroll';
 import { claimTransition, getCurrentEntry, releaseTransition } from './transition-state';
 
 import type {
@@ -121,8 +121,8 @@ const resolveScrollRoot = (options?: TransitionOptions): Element | null => {
     return typeof root === 'function' ? root() : root;
 };
 
-const handleBackScroll = (root: Element | null): void => {
-    const saved = popScrollPosition();
+const handleBackScroll = (root: Element | null, delta: number): void => {
+    const saved = peekScrollPosition(delta);
     if (saved) {
         applyScrollPosition(saved, root);
     }
@@ -187,17 +187,16 @@ export const executePageTransition = async (
     supersedePreviousTransition();
 
     const isBack = options?.direction === 'back';
+    const delta = options?.delta ?? (isBack ? -1 : 0);
     const scrollRoot = resolveScrollRoot(options);
-    if (!isBack) pushScrollPosition(scrollRoot);
+    // Held so a failed navigation can roll back by the key it actually
+    // wrote: the router may already have committed (react-router's push
+    // calls `pushState` synchronously) before the failure, in which case
+    // the current entry is no longer the one this transition saved.
+    // `undefined` on a back navigation, where nothing was saved.
+    const savedScrollKey = isBack ? undefined : saveScrollPosition(scrollRoot);
 
     setupAnimationState(options);
-
-    let scrollEntryConsumed = false;
-    const consumeScrollEntry = (): void => {
-        if (scrollEntryConsumed || isBack) return;
-        scrollEntryConsumed = true;
-        popScrollPosition();
-    };
 
     let viewTransition: ViewTransition;
     try {
@@ -205,21 +204,21 @@ export const executePageTransition = async (
             try {
                 await runNavigation(navigationFn);
             } catch (err) {
-                // Callback threw — pop the entry we pushed before
+                // Callback threw — drop the entry we saved before
                 // `startViewTransition` so the scroll store stays
                 // balanced. Re-throw so `viewTransition.finished`
                 // rejects and the outer finally cleans up the rest.
-                consumeScrollEntry();
+                discardScrollPosition(savedScrollKey);
                 throw err;
             }
             if (isBack) {
-                handleBackScroll(scrollRoot);
+                handleBackScroll(scrollRoot, delta);
             } else {
                 applyScrollPosition({ x: 0, y: 0 }, scrollRoot);
             }
         });
     } catch {
-        consumeScrollEntry();
+        discardScrollPosition(savedScrollKey);
         teardownAnimationState();
         return;
     }
