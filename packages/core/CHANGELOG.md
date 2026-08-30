@@ -1,5 +1,34 @@
 # @lemoncloud/page-transition-core
 
+## 1.4.0
+
+### Minor Changes
+
+- 1a06a84: Fix back-navigation scroll restoration, which never fired in a real router.
+
+    The restore looked the destination entry up by `history.state.key`, read inside
+    the View Transitions callback. `history.go(-1)` is asynchronous, so at that
+    moment the state still describes the entry being _left_ — the lookup was off by
+    one entry in every direction and always missed. Vue apps missed for a second
+    reason: vue-router populates neither `key` nor `idx`, so every lookup fell
+    through to a URL + `history.length` fallback that changes as entries are pushed.
+
+    The destination is now identified by its ordinal (`history.state.idx` for
+    react-router, `history.state.position` for vue-router) offset by the hop count,
+    exposed as the new `TransitionOptions.delta`. The React and Vue wrappers derive
+    it from a backward numeric `to`, and pass `0` for a path navigation or a forward
+    hop — neither names an entry that can already hold a saved offset, so a
+    navigation that merely _animates_ as a back navigation cannot pull a stale offset
+    onto the new page.
+
+    Restoring an entry no longer consumes it, so a back → browser-forward → back
+    cycle restores both times, matching native scroll restoration. Error rollback
+    now discards by the key it saved rather than re-reading the current entry, which
+    may already have advanced.
+
+    `pushScrollPosition`, `popScrollPosition`, and `clearScrollStack` keep their
+    existing signatures and behaviour.
+
 ## 1.3.0
 
 ### Minor Changes
@@ -62,8 +91,8 @@
   View Transitions callback throws so a failing navigation no
   longer leaks an entry.
 
-        All new options are optional and the default visual behavior is
-        unchanged — minor release.
+            All new options are optional and the default visual behavior is
+            unchanged — minor release.
 
 ## 1.0.0
 
