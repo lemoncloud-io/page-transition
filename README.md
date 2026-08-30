@@ -113,6 +113,7 @@ navigate(-1);                               // Back
 navigate('/home', { direction: 'back' });   // Path with back animation
 navigate('/modal', { animation: 'fade' });  // Custom animation
 navigate('/tab', { replace: true });        // No transition (tab switch)
+navigate('/tab', { replace: true, transition: true });  // ...unless you ask for one
 
 // Per-navigation customization
 navigate('/modal', {
@@ -120,6 +121,18 @@ navigate('/modal', {
     customization: { duration: 500, easing: 'ease-in-out' }
 });
 ```
+
+| Option | Default | Notes |
+|--------|---------|-------|
+| `animation` | platform default | `'slide'` · `'fade'` · `'zoom'` · `'lift'` · `'none'` |
+| `direction` | inferred from `to` | A negative number means back; pass explicitly to animate a push as a back navigation |
+| `replace` | `false` | **`replace: true` disables the transition** — the default that suits tab bars. Pass `transition: true` to keep the animation |
+| `transition` | `!replace` | Explicit override of the rule above |
+| `scrollRoot` | window | Element (or getter) that owns the scroll position. Required inside iOS WebViews — see [Scrolling & View Transitions](docs/scrolling-and-view-transitions.md) |
+| `delta` | derived from `to` | History hop count used to find the destination entry's saved scroll offset. Only worth setting when you drive `history` yourself |
+| `customization` | — | Per-navigation `duration` / `easing` override |
+| `signal` | — | `AbortSignal` for cancelling an in-flight navigation |
+| `onSkipped` | — | Called with the reason when a navigation runs without animation |
 
 ### Animation Types
 

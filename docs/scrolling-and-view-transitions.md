@@ -17,11 +17,11 @@ fix would look like.
   scrolls* is the host app's layout decision. The robust fix is to make
   the **document never scroll** and delegate scrolling to a single
   container element.
-- Today the library hard-codes `window.scroll*` for its scroll
-  save/restore, so an app that adopts a scroll container has to disable
-  that and reimplement restoration itself. A `scrollRoot` option (see
-  [Proposed library fix](#proposed-library-fix)) would let the library do
-  it for them.
+- Since 1.3.0 the library no longer hard-codes `window.scroll*`: pass
+  [`scrollRoot`](#using-scrollroot) and it saves and restores the
+  container's offset for you, on both forward and back navigation. Apps
+  that adopted the container pattern before that option existed can drop
+  their hand-rolled restoration.
 
 ## Why it happens
 
@@ -30,22 +30,27 @@ scroll alongside the transition:
 
 ```ts
 const isBack = options?.direction === 'back';
-if (!isBack) pushScrollPosition();           // saves window.scrollX/Y
+const delta = options?.delta ?? (isBack ? -1 : 0);
+const scrollRoot = resolveScrollRoot(options);
+const savedScrollKey = isBack ? undefined : saveScrollPosition(scrollRoot);
 ...
 viewTransition = startViewTransition(async () => {
   await runNavigation(navigationFn);
-  if (isBack) handleBackScroll();            // window.scrollTo(saved)
-  else        window.scrollTo(0, 0);
+  if (isBack) handleBackScroll(scrollRoot, delta);
+  else        applyScrollPosition({ x: 0, y: 0 }, scrollRoot);
 });
 ```
 
-`pushScrollPosition` / `handleBackScroll` (in `scroll.ts`) read and write
-`window.scrollX/Y` and `window.scrollTo`. That is correct when the
-**document** is the scroller — which is the default for most pages.
+`readScrollPosition` / `applyScrollPosition` (in `scroll.ts`) target
+`scrollRoot` when one is given — `scrollTop`/`scrollLeft` and
+`el.scrollTo` — and fall back to `window.scrollX/Y` and `window.scrollTo`
+when it is not. The window fallback is correct when the **document** is
+the scroller, which is the default for most pages, and is the case this
+section is about.
 
 The problem is on WebKit specifically: the root snapshot for a scrolled
 document is taken from the document top, not from the current scroll
-offset. So even though `pushScrollPosition` recorded the right number, the
+offset. So even though the library recorded the right number, the
 *captured image* of the outgoing page shows its top. Chromium clips the
 root snapshot to the visible viewport, so it does not reproduce; WebKit
 (iOS Safari, all WKWebViews) does.
@@ -82,22 +87,17 @@ body {
 </div>
 ```
 
-Then, because the library still calls `window.scrollTo` internally (a
-no-op now that the document can't scroll), the app must own scroll
-save/restore on the **container** instead:
+Pass that container to the library as `scrollRoot` and it owns scroll
+save/restore on the container instead of the window — see
+[Using `scrollRoot`](#using-scrollroot).
 
-- Save `container.scrollTop` per history entry.
-- Restore it in a **layout effect** (pre-paint). Combined with
-  `legacyFlushSync` (React wrapper) the route commits synchronously inside
-  the transition callback, so the restore lands **before** the new
-  snapshot is captured and there is no visible jump.
-- Repoint everything else that read the document scroll —
-  `IntersectionObserver` roots, pull-to-refresh, "header shadow on scroll"
-  listeners — at the container.
+One thing stays the app's job: repoint everything else that read the
+document scroll — `IntersectionObserver` roots, pull-to-refresh, "header
+shadow on scroll" listeners — at the container.
 
-A full reference implementation lives in the `epyt-app` web client
-(`apps/web`): `useScrollContainer`, `useScrollRestoration`, and the
-`useNavigateWithTransition` wrapper passing `legacyFlushSync: true`.
+`epyt-app`'s web client (`apps/web`) still carries a hand-rolled
+`useScrollRestoration`; it predates `scrollRoot` and is no longer the
+pattern to copy.
 
 > Important: do **not** put `transform` / `filter` / `will-change` on the
 > scroll container — they make `position: fixed` descendants resolve
@@ -112,55 +112,59 @@ heights). The library cannot impose that the document stay unscrolled, and
 faking it (e.g. resetting document scroll + translating content during the
 transition) is fragile and would fight the app's own layout.
 
-**What the library *can* do** is stop assuming the document is the
+**What the library *does* do** is stop assuming the document is the
 scroller, so apps that adopt the container pattern don't have to disable
 the library's scroll handling and reimplement restoration. See below.
 
-## Proposed library fix
+## Using `scrollRoot`
 
-Add an optional scroll root to `TransitionOptions` (and surface it through
-the React/Vue wrappers):
+`TransitionOptions.scrollRoot` (surfaced through both the React and Vue
+wrappers) names the element that owns the scroll position for a
+navigation. When set, save and restore target that element
+(`scrollTop`/`scrollLeft`, `el.scrollTo`) instead of the window.
 
-```ts
-export interface TransitionOptions {
-  // ...
-  /**
-   * Element that owns the scroll position for this navigation. When set,
-   * scroll save/restore targets this element (`scrollTop`/`scrollLeft`,
-   * `el.scrollTo`) instead of the window. Apps that move scrolling into a
-   * container (recommended on iOS WebViews — see docs) pass it here so the
-   * library manages restoration for them.
-   *
-   * Accepts an element or a getter (resolved at call time, since the
-   * element may mount after the hook is created).
-   */
-  scrollRoot?: Element | (() => Element | null);
-}
+```tsx
+const scroller = useRef<HTMLDivElement>(null);
+const navigate = useNavigateWithTransition();
+
+// Getter form — resolved when the transition runs, so the element may
+// mount after the hook is created.
+navigate('/detail', { scrollRoot: () => scroller.current });
 ```
 
-Plumbing (all in `packages/core/src`):
+```vue
+<script setup>
+const scroller = ref(null);
+const { navigate, goBack } = useNavigateWithTransition();
 
-1. `scroll.ts` — `createScrollStore` reads `root.scrollLeft/scrollTop`
-   instead of `window.scrollX/Y` in `save`, and the store/`popScrollPosition`
-   returns the saved `{x, y}` unchanged. Add a `scrollTo(root, pos)` helper
-   that calls `root.scrollTo(...)` (falling back to `window` when no root).
-2. `transition.ts` — resolve `const root = resolveScrollRoot(options)` once;
-   replace `window.scrollTo(0, 0)` (forward) and `window.scrollTo(saved…)`
-   (`handleBackScroll`) with the root-aware helper. `pushScrollPosition`
-   reads the same root.
-3. React wrapper — accept `scrollRoot` in `TransitionNavigateOptions`, pass
-   it through; document that callers should still pin the document via CSS
-   (the library can't do that part).
+navigate('/detail', { scrollRoot: () => scroller.value });
+goBack({ scrollRoot: () => scroller.value });
+</script>
+```
 
-This keeps the default (window) behavior unchanged — `scrollRoot` is
-opt-in — and lets a container-based app drop its hand-rolled restoration.
-It does **not** by itself remove the WebKit flash: the app must still pin
-the document so the root snapshot is captured at top == on-screen. The
-option just removes the need to fight the library while doing so.
+What it covers:
 
-A short companion note belongs in the README (link here from the
-"Browser Support" or a new "Scrolling" section), since the WebKit caveat
-will bite anyone shipping inside an iOS WebView.
+- **Forward** — the new page opens at the top of the container
+  (`window.scrollTo` is a no-op on a pinned document, which is why an app
+  without `scrollRoot` sees the new page open at the previous page's
+  offset).
+- **Back** — the destination entry's saved offset is applied inside the
+  transition callback, before the new snapshot is captured, so there is no
+  visible jump.
+
+The default (window) behavior is unchanged; `scrollRoot` is opt-in.
+
+Back restoration identifies the destination history entry by its ordinal
+(`history.state.idx` for react-router, `history.state.position` for
+vue-router) because `history.go(-1)` has not settled while the transition
+callback runs. Routers that expose neither, and hand-rolled
+`history.pushState` navigation, therefore get forward reset-to-top but no
+back restoration — see `TransitionOptions.delta` for the hop count the
+library uses.
+
+This does **not** by itself remove the WebKit flash: the app must still
+pin the document so the root snapshot is captured at top == on-screen.
+The option removes the need to fight the library while doing so.
 
 ## Checklist for consumers on iOS WebViews
 
@@ -174,3 +178,33 @@ will bite anyone shipping inside an iOS WebView.
    viewport-relative).
 5. Reserve async content height (e.g. image `aspect-ratio`) so restore
    doesn't clamp to 0 on a not-yet-laid-out page.
+6. Keep the shell route **mounted** across navigations.
+
+## The other WKWebView flash: unmounting a large subtree
+
+The scroll flash above is one cause. There is a second, with a different
+mechanism: if a route change **unmounts a large subtree** — a full-screen
+route declared as a *sibling* of the tab-shell route rather than a child
+of it — the snapshot is captured against a half-torn-down tree.
+
+The fix is structural and entirely app-side: keep the shell route mounted
+and let only the `<Outlet>` content swap, hiding chrome with CSS instead
+of unmounting it. Verified in `muzly-app` by asserting the shell element
+is the same DOM node across the navigation.
+
+```tsx
+// Sibling — the shell unmounts on entering /player.
+<Route path="/" element={<TabLayout />}>...</Route>
+<Route path="/player" element={<Player />} />
+
+// Child — the shell stays mounted, only the Outlet swaps.
+<Route path="/" element={<TabLayout />}>
+  ...
+  <Route path="player" element={<Player />} />
+</Route>
+```
+
+This does not promise a complete fix: `epyt-app`'s own note records the
+flicker as only *partially* solved by the structural change, with the
+WKWebView snapshot limit remaining. It is invisible outside a real device,
+so it is worth doing before you can measure it.

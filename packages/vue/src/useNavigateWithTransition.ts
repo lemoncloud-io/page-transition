@@ -6,6 +6,12 @@ import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
 import type { RouteLocationRaw } from 'vue-router';
 import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './types';
 
+/** Options `goBack` forwards to `navigate(-1, ...)`. */
+export type GoBackOptions = Pick<
+    TransitionNavigateOptions,
+    'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot' | 'delta'
+>;
+
 /**
  * A composable that wraps Vue Router's navigation with view transition support.
  * By default, all navigations will use view transitions with auto-detected platform animations.
@@ -56,7 +62,7 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): {
     navigate: NavigateWithTransitionFn;
-    goBack: (options?: Pick<TransitionNavigateOptions, 'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot'>) => Promise<void>;
+    goBack: (options?: GoBackOptions) => Promise<void>;
 } => {
     const router = useRouter();
 
@@ -64,7 +70,8 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         to: RouteLocationRaw | number,
         options?: TransitionNavigateOptions
     ): Promise<void> => {
-        const { transition, direction, animation, replace, customization, signal, onSkipped, scrollRoot } = options ?? {};
+        const { transition, direction, animation, replace, customization, signal, onSkipped, scrollRoot, delta } =
+            options ?? {};
 
         // Honor an already-aborted signal even on the no-transition
         // branch, so the consumer contract holds regardless of which
@@ -97,6 +104,10 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
                 ? 'back'
                 : 'forward';
 
+        // Only a backward hop names an entry that can already hold a saved
+        // offset; anything else must resolve to 0.
+        const resolvedDelta = delta ?? (typeof to === 'number' && to < 0 ? to : 0);
+
         // Execute navigation with transition
         return executePageTransition(
             () => {
@@ -111,6 +122,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
             {
                 animation,
                 direction: resolvedDirection,
+                delta: resolvedDelta,
                 config,
                 customization,
                 signal,
@@ -120,7 +132,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         );
     };
 
-    const goBack = (options?: Pick<TransitionNavigateOptions, 'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot'>): Promise<void> => {
+    const goBack = (options?: GoBackOptions): Promise<void> => {
         return navigate(-1, options);
     };
 
