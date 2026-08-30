@@ -6,6 +6,12 @@ import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
 import type { RouteLocationRaw } from 'vue-router';
 import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './types';
 
+/** Options `goBack` forwards to `navigate(-1, ...)`. */
+export type GoBackOptions = Pick<
+    TransitionNavigateOptions,
+    'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot' | 'delta'
+>;
+
 /**
  * A composable that wraps Vue Router's navigation with view transition support.
  * By default, all navigations will use view transitions with auto-detected platform animations.
@@ -56,12 +62,7 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): {
     navigate: NavigateWithTransitionFn;
-    goBack: (
-        options?: Pick<
-            TransitionNavigateOptions,
-            'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot' | 'delta'
-        >
-    ) => Promise<void>;
+    goBack: (options?: GoBackOptions) => Promise<void>;
 } => {
     const router = useRouter();
 
@@ -131,12 +132,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         );
     };
 
-    const goBack = (
-        options?: Pick<
-            TransitionNavigateOptions,
-            'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot' | 'delta'
-        >
-    ): Promise<void> => {
+    const goBack = (options?: GoBackOptions): Promise<void> => {
         return navigate(-1, options);
     };
 
