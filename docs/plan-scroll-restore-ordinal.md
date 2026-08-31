@@ -333,7 +333,9 @@ as the wrappers drive it.
 
 ## Outcome
 
-**Status: shipped.** Branch `fix/scroll-restore-ordinal`, commit `1a06a84`. Verify green —
+**Status: released in 1.4.0.** Branch `fix/scroll-restore-ordinal` — commits
+`1a06a84` (the fix), `0a89c0e` (plan status), `8f25c96` (a `/tech-debt` type-alias
+cleanup) — merged as `7cfc088`, published from the changesets version PR `d7bd43f`. Verify green —
 `pnpm typecheck` (3/3 packages), `pnpm test:run` (101 tests, 9 files, up from
 79), `pnpm lint` (clean), `pnpm build`. `packages/core/dist/index.d.ts` contains
 none of the three new internals, so the public API surface is unchanged as the

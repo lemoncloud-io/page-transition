@@ -17,11 +17,13 @@ fix would look like.
   scrolls* is the host app's layout decision. The robust fix is to make
   the **document never scroll** and delegate scrolling to a single
   container element.
-- Since 1.3.0 the library no longer hard-codes `window.scroll*`: pass
-  [`scrollRoot`](#using-scrollroot) and it saves and restores the
-  container's offset for you, on both forward and back navigation. Apps
-  that adopted the container pattern before that option existed can drop
-  their hand-rolled restoration.
+- The library no longer hard-codes `window.scroll*`: pass
+  [`scrollRoot`](#using-scrollroot) and it targets the container for you.
+  **Forward** reset-to-top has worked since 1.3.0; **back** restoration
+  only since **1.4.0** — the 1.3.0 lookup resolved the destination by a
+  history key that had not settled yet and never matched, so an app on
+  1.3.0 still needs its own back restoration. Apps on 1.4.0 can drop their
+  hand-rolled version.
 
 ## Why it happens
 
@@ -148,19 +150,19 @@ What it covers:
   (`window.scrollTo` is a no-op on a pinned document, which is why an app
   without `scrollRoot` sees the new page open at the previous page's
   offset).
-- **Back** — the destination entry's saved offset is applied inside the
-  transition callback, before the new snapshot is captured, so there is no
-  visible jump.
+- **Back** (1.4.0+) — the destination entry's saved offset is applied
+  inside the transition callback, before the new snapshot is captured, so
+  there is no visible jump. On 1.3.0 this silently did nothing.
 
 The default (window) behavior is unchanged; `scrollRoot` is opt-in.
 
 Back restoration identifies the destination history entry by its ordinal
 (`history.state.idx` for react-router, `history.state.position` for
 vue-router) because `history.go(-1)` has not settled while the transition
-callback runs. Routers that expose neither, and hand-rolled
-`history.pushState` navigation, therefore get forward reset-to-top but no
-back restoration — see `TransitionOptions.delta` for the hop count the
-library uses.
+callback runs — this is what 1.4.0 changed. Routers that expose neither,
+and hand-rolled `history.pushState` navigation, therefore get forward
+reset-to-top but no back restoration — see `TransitionOptions.delta` for
+the hop count the library uses.
 
 This does **not** by itself remove the WebKit flash: the app must still
 pin the document so the root snapshot is captured at top == on-screen.
