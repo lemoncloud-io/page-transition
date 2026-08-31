@@ -1,6 +1,6 @@
 {
     "name": "@lemoncloud/vue-page-transition",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "iOS/Android style page transitions for Vue using View Transitions API",
     "type": "module",
     "exports": {
