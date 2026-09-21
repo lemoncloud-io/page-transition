@@ -1,3 +1,4 @@
+import { nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { executePageTransition, isViewTransitionSupported } from '@lemoncloud/page-transition-core';
@@ -5,6 +6,8 @@ import { executePageTransition, isViewTransitionSupported } from '@lemoncloud/pa
 import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
 import type { RouteLocationRaw } from 'vue-router';
 import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './types';
+
+const ROUTE_COMMIT_TIMEOUT_MS = 500;
 
 /** Options `goBack` forwards to `navigate(-1, ...)`. */
 export type GoBackOptions = Pick<
@@ -65,6 +68,35 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
     goBack: (options?: GoBackOptions) => Promise<void>;
 } => {
     const router = useRouter();
+    let settleRouteCommit: (() => void) | null = null;
+
+    // `router.go()` only queues the traversal — the router hears `popstate`
+    // in a later task. `afterEach` fires once the route has been finalized
+    // or a guard has aborted it, and the DOM follows on the next tick. A
+    // guard that throws skips `afterEach`; that case falls back to the
+    // timeout below.
+    const waitForRouteCommit = (): Promise<void> => {
+        // A second hop before the first has committed (double-tap on
+        // back) releases the earlier waiter: core has already superseded
+        // that transition, so nothing should keep its callback pending.
+        settleRouteCommit?.();
+        return new Promise<void>(resolve => {
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            let removeGuard: (() => void) | undefined;
+            const settle = (afterRender: Promise<void> = Promise.resolve()): void => {
+                clearTimeout(timer);
+                removeGuard?.();
+                settleRouteCommit = null;
+                void afterRender.then(resolve);
+            };
+            // `router.go()` past either end of the stack never navigates.
+            // Rendering is paused while the View Transitions callback is
+            // pending, so give up rather than freeze the page.
+            timer = setTimeout(() => settle(), ROUTE_COMMIT_TIMEOUT_MS);
+            removeGuard = router.afterEach(() => settle(nextTick()));
+            settleRouteCommit = settle;
+        });
+    };
 
     const navigate: NavigateWithTransitionFn = (
         to: RouteLocationRaw | number,
@@ -112,7 +144,9 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         return executePageTransition(
             () => {
                 if (typeof to === 'number') {
+                    const committed = waitForRouteCommit();
                     router.go(to);
+                    return committed;
                 } else if (replace) {
                     return router.replace(to).then(() => {});
                 } else {
