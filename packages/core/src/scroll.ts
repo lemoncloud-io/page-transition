@@ -10,10 +10,11 @@
  * (vue-router). Both number the history stack, increment by exactly one
  * per push, and survive a replace, so the ordinal identifies the entry
  * *and* its neighbours: the entry `n` steps back is simply `ordinal + n`.
- * That matters because `history.go(-n)` is asynchronous — while the
- * transition callback runs, the state still describes the entry being
+ * That matters because `history.go(-n)` is asynchronous — when the
+ * transition callback starts, the state still describes the entry being
  * *left*, so a back navigation cannot find its destination by reading a
- * key. Arithmetic on the departing ordinal can.
+ * key. Arithmetic on the departing ordinal can, provided it is done
+ * before the traversal commits (`resolveScrollKey`).
  *
  * Without an ordinal the key falls back to `history.state.key`, then to
  * the URL plus `history.length`. Neither can name a *neighbouring* entry,
@@ -37,6 +38,8 @@ const DEFAULT_MAX_ENTRIES = 50;
 
 interface ScrollStore {
     save: (pos: ScrollPosition) => string;
+    resolveKey: (delta: number) => string | undefined;
+    peek: (key: string | undefined) => ScrollPosition | undefined;
     restore: (delta: number, options: { consume: boolean }) => ScrollPosition | undefined;
     discard: (key: string) => void;
     clear: () => void;
@@ -110,6 +113,9 @@ const createScrollStore = (maxEntries: number = DEFAULT_MAX_ENTRIES): ScrollStor
             evictIfFull();
             return key;
         },
+        resolveKey,
+        peek: (key: string | undefined): ScrollPosition | undefined =>
+            key === undefined ? undefined : entries.get(key),
         restore: (delta: number, { consume }: { consume: boolean }): ScrollPosition | undefined => {
             if (typeof window === 'undefined') return undefined;
             const key = resolveKey(delta);
@@ -142,14 +148,26 @@ export const saveScrollPosition = (root?: Element | null): string | undefined =>
 };
 
 /**
- * Internal — reads the offset saved for the entry `delta` hops from the
- * active one (`-1` = one step back, `0` = the active entry) without
- * consuming it, so the position survives a browser-driven forward/back
- * cycle the way native scroll restoration does. Not part of the
- * package's public API.
+ * Internal — names the entry `delta` hops from the active one (`-1` = one
+ * step back, `0` = the active entry). Read it *before* the navigation
+ * runs: once the traversal has committed the active entry is the
+ * destination itself, and the same arithmetic would name the entry
+ * beyond it. `undefined` when no ordinal is available to do the
+ * arithmetic with. Not part of the package's public API.
  */
-export const peekScrollPosition = (delta: number): ScrollPosition | undefined =>
-    defaultStore.restore(delta, { consume: false });
+export const resolveScrollKey = (delta: number): string | undefined => {
+    if (typeof window === 'undefined') return undefined;
+    return defaultStore.resolveKey(delta);
+};
+
+/**
+ * Internal — reads the offset saved under a key from `resolveScrollKey`
+ * without consuming it, so the position survives a browser-driven
+ * forward/back cycle the way native scroll restoration does. Not part
+ * of the package's public API.
+ */
+export const peekScrollPositionByKey = (key: string | undefined): ScrollPosition | undefined =>
+    defaultStore.peek(key);
 
 /**
  * Internal — removes one stored record by key. Used to undo a `save()`

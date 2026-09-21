@@ -7,7 +7,8 @@ import {
     readScrollPosition,
     applyScrollPosition,
     saveScrollPosition,
-    peekScrollPosition,
+    peekScrollPositionByKey,
+    resolveScrollKey,
     discardScrollPosition,
     __defaultScrollStoreForTest,
 } from './scroll';
@@ -116,6 +117,9 @@ describe('scroll root (container scrolling)', () => {
         expect(popScrollPosition()).toEqual({ x: 0, y: 360 });
     });
 });
+
+/** Reads the entry `delta` hops away, as `executePageTransition` does before navigating. */
+const peekScrollPosition = (delta: number) => peekScrollPositionByKey(resolveScrollKey(delta));
 
 /** Moves the document to a new history entry, as a router would. */
 const enterEntry = (state: unknown, path: string): void => {
