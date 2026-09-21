@@ -1,12 +1,17 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { executePageTransition } from '@lemoncloud/page-transition-core';
 
 import type { PageTransitionConfig } from '@lemoncloud/page-transition-core';
 import type { To } from 'react-router-dom';
 import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './types';
+
+const LOCATION_COMMIT_TIMEOUT_MS = 500;
+
+// `useLayoutEffect` warns during server rendering on React 18.
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /**
  * A wrapper hook around useNavigate that adds view transition support.
@@ -39,6 +44,40 @@ import type { NavigateWithTransitionFn, TransitionNavigateOptions } from './type
  */
 export const useNavigateWithTransition = (config?: PageTransitionConfig): NavigateWithTransitionFn => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const settleLocationCommit = useRef<(() => void) | null>(null);
+
+    // The cleanup runs while React commits the next location (or unmounts
+    // this component, which a back navigation usually does) — either way
+    // the destination DOM is in place one microtask later.
+    useIsomorphicLayoutEffect(
+        () => () => {
+            settleLocationCommit.current?.();
+            settleLocationCommit.current = null;
+        },
+        [location.key]
+    );
+
+    const waitForLocationCommit = useCallback((): Promise<void> => {
+        // A second hop before the first has committed (double-tap on
+        // back) releases the earlier waiter: core has already superseded
+        // that transition, so nothing should keep its callback pending.
+        settleLocationCommit.current?.();
+        return new Promise<void>(resolve => {
+            // `history.go()` past either end of the stack, or a blocked
+            // navigation, never changes the location. Rendering is paused
+            // while the View Transitions callback is pending, so give up
+            // rather than freeze the page.
+            const timer = setTimeout(() => {
+                settleLocationCommit.current = null;
+                resolve();
+            }, LOCATION_COMMIT_TIMEOUT_MS);
+            settleLocationCommit.current = () => {
+                clearTimeout(timer);
+                void Promise.resolve().then(resolve);
+            };
+        });
+    }, []);
 
     const navigateWithTransition = useCallback(
         (to: To | number, options?: TransitionNavigateOptions): Promise<void> => {
@@ -88,14 +127,32 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
             // returned Promise). Falling back to `flushSync` is opt-in
             // via `legacyFlushSync` so consumers can escape a regression
             // without downgrading the library.
-            const navigationFn = legacyFlushSync
-                ? () => {
-                      flushSync(runNavigate);
-                  }
-                : async () => {
-                      runNavigate();
-                      await Promise.resolve();
-                  };
+            //
+            // A numeric hop is `history.go()`, which only queues the
+            // traversal: the router hears `popstate` in a later task, so
+            // neither a microtask nor `flushSync` has anything to wait on.
+            // Hold the callback open until the new location has committed
+            // — otherwise the "new" snapshot is the page being left and
+            // the back scroll offset lands on the wrong DOM.
+            const navigationFn =
+                typeof to === 'number'
+                    ? async () => {
+                          const committed = waitForLocationCommit();
+                          if (legacyFlushSync) {
+                              flushSync(runNavigate);
+                          } else {
+                              runNavigate();
+                          }
+                          await committed;
+                      }
+                    : legacyFlushSync
+                      ? () => {
+                            flushSync(runNavigate);
+                        }
+                      : async () => {
+                            runNavigate();
+                            await Promise.resolve();
+                        };
 
             const resolvedDirection = direction !== undefined
                 ? direction
@@ -120,7 +177,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
         },
         // Config values (platform, detectPlatform) are stable - only navigate reference matters
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [navigate, config?.platform, config?.detectPlatform]
+        [navigate, waitForLocationCommit, config?.platform, config?.detectPlatform]
     );
 
     return navigateWithTransition;
