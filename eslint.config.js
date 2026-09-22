@@ -48,4 +48,12 @@ export default [
             'no-console': ['warn', { allow: ['warn', 'error'] }],
         },
     },
+    {
+        // Vue composables share the `use*` prefix but are not React hooks;
+        // a `setup()` calling one is not a rules-of-hooks violation.
+        files: ['packages/vue/src/**/*.ts'],
+        rules: {
+            'react-hooks/rules-of-hooks': 'off',
+        },
+    },
 ];

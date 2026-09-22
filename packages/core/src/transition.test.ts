@@ -248,10 +248,34 @@ describe('executePageTransition — scrollRoot', () => {
         expect(el.scrollTo).toHaveBeenCalledWith(0, 130);
     });
 
-    it('does not restore a stale offset for a push that only animates as back', async () => {
-        const el = await seedEntryToReturnTo(640);
+    it('restores the destination offset when the traversal commits inside the callback', async () => {
+        const el = await seedEntryToReturnTo(275);
 
-        await executePageTransition(() => undefined, { direction: 'back', delta: 0, scrollRoot: el });
+        // The wrappers hold the callback open until the route has
+        // committed, so by the time the store is read `history.state`
+        // already belongs to the destination entry.
+        await executePageTransition(
+            async () => {
+                enterEntry(0);
+            },
+            { direction: 'back', delta: -1, scrollRoot: el },
+        );
+
+        expect(el.scrollTo).toHaveBeenCalledWith(0, 275);
+    });
+
+    it('does not restore a stale offset for a push that only animates as back', async () => {
+        // Entry 0 holds a saved offset from an earlier push; the document
+        // is back on it, and now pushes away again with a back animation.
+        const el = await seedEntryToReturnTo(640);
+        enterEntry(0);
+
+        await executePageTransition(
+            () => {
+                enterEntry(1);
+            },
+            { direction: 'back', delta: 0, scrollRoot: el },
+        );
 
         expect(el.scrollTo).not.toHaveBeenCalledWith(0, 640);
     });

@@ -20,10 +20,14 @@ fix would look like.
 - The library no longer hard-codes `window.scroll*`: pass
   [`scrollRoot`](#using-scrollroot) and it targets the container for you.
   **Forward** reset-to-top has worked since 1.3.0; **back** restoration
-  only since **1.4.0** — the 1.3.0 lookup resolved the destination by a
-  history key that had not settled yet and never matched, so an app on
-  1.3.0 still needs its own back restoration. Apps on 1.4.0 can drop their
-  hand-rolled version.
+  only since **1.4.0**, and only lands on the destination page since
+  **1.4.1** — see [Back restoration by version](#back-restoration-by-version).
+  Apps on 1.4.1 can drop their hand-rolled version.
+- A separate, app-side trap: setting `history.scrollRestoration = 'manual'`
+  turns the **native swipe-back** gesture of a WKWebView into a white
+  screen whenever the two pages are scrolled differently. The library never
+  touches that setting; leave it on `'auto'` — see
+  [Native swipe-back and `history.scrollRestoration`](#native-swipe-back-and-historyscrollrestoration).
 
 ## Why it happens
 
@@ -93,6 +97,13 @@ Pass that container to the library as `scrollRoot` and it owns scroll
 save/restore on the container instead of the window — see
 [Using `scrollRoot`](#using-scrollroot).
 
+The cost of pinning: iOS's **status-bar tap → scroll to top** acts on the
+WKWebView's own scroll view, and with the document pinned there is nothing
+for it to move. `muzly-app` adopted the container pattern and then reverted
+to a scrolling document for exactly this reason (commit `8c713f3` in that
+repo). Weigh a one-frame snapshot flash against losing tap-to-top before
+you pin.
+
 One thing stays the app's job: repoint everything else that read the
 document scroll — `IntersectionObserver` roots, pull-to-refresh, "header
 shadow on scroll" listeners — at the container.
@@ -150,23 +161,96 @@ What it covers:
   (`window.scrollTo` is a no-op on a pinned document, which is why an app
   without `scrollRoot` sees the new page open at the previous page's
   offset).
-- **Back** (1.4.0+) — the destination entry's saved offset is applied
-  inside the transition callback, before the new snapshot is captured, so
-  there is no visible jump. On 1.3.0 this silently did nothing.
+- **Back** (1.4.1+) — the destination entry's saved offset is applied
+  inside the transition callback, after the destination page has
+  committed and before the new snapshot is captured, so there is no
+  visible jump. Earlier versions differ — see below.
 
 The default (window) behavior is unchanged; `scrollRoot` is opt-in.
 
-Back restoration identifies the destination history entry by its ordinal
-(`history.state.idx` for react-router, `history.state.position` for
-vue-router) because `history.go(-1)` has not settled while the transition
-callback runs — this is what 1.4.0 changed. Routers that expose neither,
-and hand-rolled `history.pushState` navigation, therefore get forward
-reset-to-top but no back restoration — see `TransitionOptions.delta` for
-the hop count the library uses.
+### Back restoration by version
+
+`history.go(-1)` only queues the traversal: `popstate` reaches the router
+in a later task, so at the moment the View Transitions callback starts,
+`history.state` and the DOM still describe the page being *left*.
+
+| Version | What back restoration did |
+|---|---|
+| 1.3.0 | Looked the destination up by `history.state.key` — the key of the page being left. Never matched; silently restored nothing. |
+| 1.4.0 | Found the destination by **ordinal** (`history.state.idx` for react-router, `history.state.position` for vue-router) offset by the hop count, so the lookup works while the traversal is still unsettled. But the callback still ended after one microtask, so the offset was applied to the *leaving* page's DOM and the "new" snapshot was taken of that page. |
+| 1.4.1 | The React and Vue wrappers hold the callback open until the router has committed the destination (`location.key` layout-effect cleanup in React, `afterEach` + `nextTick` in Vue), with a 500ms fallback for hops that never navigate. Core names the destination entry *before* the navigation runs, so it reads the right record whether the traversal has settled or not. |
+
+Routers that expose no ordinal, and hand-rolled `history.pushState`
+navigation, get forward reset-to-top but no back restoration — see
+`TransitionOptions.delta` for the hop count the library uses.
+
+Three consequences of waiting for the commit, all accepted:
+
+- A numeric hop that cannot change the location (`navigate(0)`, a hop
+  past either end of the stack, a navigation a guard blocks) resolves
+  after the 500ms fallback rather than immediately. The library cannot
+  tell "not yet" from "never" without it.
+- The React hook subscribes to `useLocation()`, so a component that calls
+  `useNavigateWithTransition` or `useGoBack` re-renders on every
+  navigation.
+- The wait is part of the navigation callback, so the `animation: 'none'`,
+  unsupported-browser and reduced-motion paths wait too. Only the branches
+  that skip `executePageTransition` altogether return as soon as the
+  router call does: `transition: false` (or `replace: true` without
+  `transition: true`) in both wrappers, and an unsupported browser in the
+  Vue composable.
 
 This does **not** by itself remove the WebKit flash: the app must still
 pin the document so the root snapshot is captured at top == on-screen.
 The option removes the need to fight the library while doing so.
+
+## Native swipe-back and `history.scrollRestoration`
+
+This one is not the library's, but it produced the same report — "back
+shows a white screen unless both pages are at the top" — from three apps
+that use the library. It is confirmed on-device in one (`muzly-app`);
+the other two are suspected, not verified.
+
+**Symptom.** `allowsBackForwardNavigationGestures` on the WKWebView. The
+header back button (`goBack()`) works. The edge-swipe gesture reveals the
+previous page only when both pages are scrolled to the top; otherwise it
+reveals a blank white (or background-coloured) sheet, and the real page
+appears only after the gesture completes.
+
+**Cause.** The gesture does not render the previous page; it drags a
+snapshot WebKit took when you left it. Before using that snapshot WebKit
+checks it against the target history item, in
+`Source/WebKit/UIProcess/ios/ViewGestureControllerIOS.mm`
+(`beginSwipeGesture`, the `canUseSnapshot` lambda):
+
+```cpp
+if (!shouldRestoreScrollPosition && (currentScrollPosition != snapshot->viewScrollPosition()))
+    return false;
+```
+
+`shouldRestoreScrollPosition` is the item's flag behind
+`history.scrollRestoration` — `History::setScrollRestoration` in
+`Source/WebCore/page/History.cpp` stores `'auto'` as `true` and
+`'manual'` as `false`. So with `'manual'`, a snapshot is rejected whenever
+the page you are on is scrolled differently from the page you are going
+back to, and the swipe shows `[UIColor whiteColor]` (or the snapshot's
+recorded background colour) instead. Read on WebKit `main` on 2026-09-21;
+the exact revision shipping in a given iOS is not pinned, but the
+behaviour matched on-device.
+
+**Fix (app-side).** Do not set `history.scrollRestoration = 'manual'`
+inside a WKWebView. The library never sets it either way. An app that
+restores scroll itself (a layout effect keyed by the location) coexists
+with `'auto'`: both write the same value, in the same frame. Verified on
+an iOS device in `muzly-app` on 2026-09-21; not yet on Android.
+
+**Known limit.** Once the gesture completes, WebKit swaps the snapshot for
+the live page and there is a visible flash — at scroll top too, and with
+the app's own restoration disabled too, so it is not a scroll race. It is
+the snapshot → live handoff, and `epyt-app`'s note records it as only
+partially reducible (keep the shell mounted, restore in a layout effect).
+The gesture was kept anyway; an interactive swipe that follows the finger
+was judged worth the flash.
 
 ## Checklist for consumers on iOS WebViews
 
@@ -181,6 +265,8 @@ The option removes the need to fight the library while doing so.
 5. Reserve async content height (e.g. image `aspect-ratio`) so restore
    doesn't clamp to 0 on a not-yet-laid-out page.
 6. Keep the shell route **mounted** across navigations.
+7. Leave `history.scrollRestoration` on `'auto'` if the native swipe-back
+   gesture is enabled.
 
 ## The other WKWebView flash: unmounting a large subtree
 

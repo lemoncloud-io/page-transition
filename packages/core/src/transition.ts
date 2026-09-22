@@ -9,7 +9,13 @@ import {
 } from './constants';
 import { resolvePlatform } from './platform';
 import { isReducedMotion } from './reduced-motion';
-import { applyScrollPosition, discardScrollPosition, peekScrollPosition, saveScrollPosition } from './scroll';
+import {
+    applyScrollPosition,
+    discardScrollPosition,
+    peekScrollPositionByKey,
+    resolveScrollKey,
+    saveScrollPosition,
+} from './scroll';
 import { claimTransition, getCurrentEntry, releaseTransition } from './transition-state';
 
 import type {
@@ -121,8 +127,8 @@ const resolveScrollRoot = (options?: TransitionOptions): Element | null => {
     return typeof root === 'function' ? root() : root;
 };
 
-const handleBackScroll = (root: Element | null, delta: number): void => {
-    const saved = peekScrollPosition(delta);
+const handleBackScroll = (root: Element | null, destinationKey: string | undefined): void => {
+    const saved = peekScrollPositionByKey(destinationKey);
     if (saved) {
         applyScrollPosition(saved, root);
     }
@@ -195,6 +201,13 @@ export const executePageTransition = async (
     // the current entry is no longer the one this transition saved.
     // `undefined` on a back navigation, where nothing was saved.
     const savedScrollKey = isBack ? undefined : saveScrollPosition(scrollRoot);
+    // Named now, while the active entry is still the one being left: the
+    // wrappers hold the callback open until the traversal has committed,
+    // after which `history.state` already describes the destination. A
+    // zero delta is a push that merely animates as back — the active entry
+    // is the one being left, and its own saved offset must not land on
+    // the new page.
+    const destinationScrollKey = isBack && delta !== 0 ? resolveScrollKey(delta) : undefined;
 
     setupAnimationState(options);
 
@@ -212,7 +225,7 @@ export const executePageTransition = async (
                 throw err;
             }
             if (isBack) {
-                handleBackScroll(scrollRoot, delta);
+                handleBackScroll(scrollRoot, destinationScrollKey);
             } else {
                 applyScrollPosition({ x: 0, y: 0 }, scrollRoot);
             }

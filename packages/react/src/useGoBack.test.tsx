@@ -11,7 +11,13 @@ import { useGoBack } from './useGoBack';
 
 import type { ReactNode } from 'react';
 
-const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
+// Start one entry deep so `go(-1)` has somewhere to go — at index 0 the
+// location never changes and back only settles by timeout.
+const wrapper = ({ children }: { children: ReactNode }) => (
+    <MemoryRouter initialEntries={['/', '/page']} initialIndex={1}>
+        {children}
+    </MemoryRouter>
+);
 
 describe('useGoBack', () => {
     beforeEach(() => {
