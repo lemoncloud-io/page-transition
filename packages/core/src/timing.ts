@@ -115,15 +115,17 @@ export const createTransitionTimer = (deps: TimerDeps = browserDeps()): Transiti
         const animationEnd = animationRan ? finishedAt : undefined;
         const countedFrames = animationRan && requestFrame !== undefined;
 
-        const phases = [
-            ['pt:capture', startedAt, callbackAt],
-            ['pt:update', callbackAt, updatedAt],
-            ['pt:start', updatedAt, readyAt],
-            ['pt:animation', readyAt, animationEnd],
-        ] as const;
-        phases.forEach(([name, start, end]) => {
-            if (start !== undefined && end !== undefined) measure?.(name, start, end);
-        });
+        if (measure) {
+            const phases = [
+                ['pt:capture', startedAt, callbackAt],
+                ['pt:update', callbackAt, updatedAt],
+                ['pt:start', updatedAt, readyAt],
+                ['pt:animation', readyAt, animationEnd],
+            ] as const;
+            phases.forEach(([name, start, end]) => {
+                if (start !== undefined && end !== undefined) measure(name, start, end);
+            });
+        }
 
         return {
             outcome,
