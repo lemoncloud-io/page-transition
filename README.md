@@ -133,6 +133,7 @@ navigate('/modal', {
 | `customization` | — | Per-navigation `duration` / `easing` override |
 | `signal` | — | `AbortSignal` for cancelling an in-flight navigation |
 | `onSkipped` | — | Called with the reason when a navigation runs without animation |
+| `onTiming` | — | Phase durations once an animated transition settles — tells a freeze after the tap from stutter during the motion. See the [core README](packages/core/README.md#measuring-a-transition-ontiming) |
 
 ### Animation Types
 

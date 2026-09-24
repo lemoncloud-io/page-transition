@@ -5,6 +5,7 @@ import type {
     NavigationDirection,
     SkipReason,
     TransitionCustomization,
+    TransitionTiming,
 } from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
@@ -101,6 +102,12 @@ export interface TransitionNavigateOptions {
      * Notified when the navigation completes without animation.
      */
     onSkipped?: (reason: SkipReason) => void;
+
+    /**
+     * Receives phase durations once an animated transition settles —
+     * see `TransitionOptions.onTiming` in the core package. Opt-in.
+     */
+    onTiming?: (timing: TransitionTiming) => void;
 
     /**
      * Element that owns the scroll position when the app scrolls a
