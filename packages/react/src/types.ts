@@ -5,6 +5,7 @@ import type {
     NavigationDirection,
     SkipReason,
     TransitionCustomization,
+    TransitionTiming,
 } from '@lemoncloud/page-transition-core';
 
 /** Options for navigation with view transitions */
@@ -86,6 +87,12 @@ export interface TransitionNavigateOptions extends NavigateOptions {
      * aborted, or superseded by a newer call).
      */
     onSkipped?: (reason: SkipReason) => void;
+
+    /**
+     * Receives phase durations once an animated transition settles —
+     * see `TransitionOptions.onTiming` in the core package. Opt-in.
+     */
+    onTiming?: (timing: TransitionTiming) => void;
 
     /**
      * @experimental Forces the legacy `flushSync` path used in

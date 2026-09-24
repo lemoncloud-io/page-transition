@@ -75,6 +75,8 @@ interface TransitionOptions {
     signal?: AbortSignal;
     /** Notified when an animation was bypassed. Useful for analytics / debugging. */
     onSkipped?: (reason: SkipReason) => void;
+    /** Phase durations once an animated transition settles. Opt-in. */
+    onTiming?: (timing: TransitionTiming) => void;
 }
 
 type SkipReason =
@@ -91,6 +93,55 @@ caller via `onSkipped('superseded')`.
 
 The navigation callback may be `async`; the View Transitions API
 natively awaits it so async router commits stay snapshot-consistent.
+
+#### Measuring a transition (`onTiming`)
+
+`onTiming` tells a freeze after the tap apart from stutter during the
+motion. It is called once per animated transition, after it settles, with
+phase durations in milliseconds:
+
+```ts
+interface TransitionTiming {
+    outcome: 'finished' | 'skipped' | 'error';
+    capture?: number;     // call → callback entry (old snapshot)
+    update?: number;      // callback → updateCallbackDone (navigation + new page render)
+    start?: number;       // updateCallbackDone → ready (new snapshot)
+    animation?: number;   // ready → finished ('finished' only)
+    frames?: number;      // requestAnimationFrame ticks during the animation
+    maxFrameGap?: number; // longest gap between those ticks
+}
+
+executePageTransition(navigate, {
+    onTiming: (t) => console.table(t),
+});
+```
+
+A phase the transition never reached is `undefined`: a superseded or aborted
+transition reports `'skipped'` without `animation` or frame stats, a
+navigation that throws reports `'error'` with only `capture`. Navigations that
+skip the animation up front (`unsupported`, `reduced-motion`,
+`animation: 'none'`) go to `onSkipped` instead.
+
+Reading the numbers:
+
+- **Long `update`** — the page is frozen while the router commits and the
+  new page renders. Shrink that work: prefetch lazy route chunks before
+  navigating, keep the new page's first render light.
+- **Large `maxFrameGap`** — the main thread missed frames during the motion.
+  `requestAnimationFrame` only sees the main thread; if the motion stutters
+  while `maxFrameGap` stays near 16ms, check the compositor in the browser's
+  rendering timeline (Safari Web Inspector → Timelines).
+- A backgrounded tab pauses `requestAnimationFrame`, so `maxFrameGap` from a
+  hidden page is meaningless.
+- A browser that cuts the animation short *after* it started (e.g. the page
+  was hidden) still fulfils `finished`, so that transition reports
+  `'finished'` with a shorter `animation`.
+
+Only while `onTiming` is set, the library counts frames and leaves
+`pt:capture`, `pt:update`, `pt:start` and `pt:animation` measures on the
+performance timeline, so the phases also show up in DevTools recordings.
+The library never clears them — call `performance.clearMeasures()` if a long
+measuring session piles up entries.
 
 ### `isViewTransitionSupported()`
 
