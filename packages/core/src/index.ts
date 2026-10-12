@@ -36,6 +36,7 @@ export type {
     TransitionCustomization,
     TransitionOptions,
     SkipReason,
+    TransitionTiming,
     ViewTransition,
     ViewTransitionCallback,
 } from './types';

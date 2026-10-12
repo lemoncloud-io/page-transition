@@ -12,7 +12,7 @@ const ROUTE_COMMIT_TIMEOUT_MS = 500;
 /** Options `goBack` forwards to `navigate(-1, ...)`. */
 export type GoBackOptions = Pick<
     TransitionNavigateOptions,
-    'animation' | 'customization' | 'signal' | 'onSkipped' | 'scrollRoot' | 'delta'
+    'animation' | 'customization' | 'signal' | 'onSkipped' | 'onTiming' | 'scrollRoot' | 'delta'
 >;
 
 /**
@@ -102,8 +102,18 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
         to: RouteLocationRaw | number,
         options?: TransitionNavigateOptions
     ): Promise<void> => {
-        const { transition, direction, animation, replace, customization, signal, onSkipped, scrollRoot, delta } =
-            options ?? {};
+        const {
+            transition,
+            direction,
+            animation,
+            replace,
+            customization,
+            signal,
+            onSkipped,
+            onTiming,
+            scrollRoot,
+            delta,
+        } = options ?? {};
 
         // Honor an already-aborted signal even on the no-transition
         // branch, so the consumer contract holds regardless of which
@@ -161,6 +171,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): {
                 customization,
                 signal,
                 onSkipped,
+                onTiming,
                 scrollRoot,
             }
         );

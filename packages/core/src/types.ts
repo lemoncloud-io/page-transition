@@ -54,6 +54,46 @@ export type SkipReason =
     | 'aborted'
     | 'superseded';
 
+/**
+ * Phase durations of one animated transition, in milliseconds. A phase
+ * the transition never reached is `undefined`.
+ */
+export interface TransitionTiming {
+    /**
+     * How the transition ended.
+     * - `'finished'`: the animation ran to completion — or the browser cut
+     *   it short after it started, which `finished` does not reveal
+     * - `'skipped'`: superseded by a newer navigation, aborted via
+     *   `signal`, or skipped by the browser before the animation started
+     * - `'error'`: the navigation callback threw or rejected
+     */
+    outcome: 'finished' | 'skipped' | 'error';
+    /** Call → View Transitions callback entry: capturing the old snapshot. */
+    capture?: number;
+    /**
+     * Callback entry → `updateCallbackDone`: the navigation, the router
+     * commit and the new page's first render. A long `update` is the
+     * freeze between tap and motion.
+     */
+    update?: number;
+    /** `updateCallbackDone` → `ready`: capturing the new snapshot. */
+    start?: number;
+    /** `ready` → `finished`: the animation itself. `'finished'` only. */
+    animation?: number;
+    /**
+     * Main-thread frames counted with `requestAnimationFrame` during the
+     * animation. `'finished'` only, and `undefined` where
+     * `requestAnimationFrame` is missing.
+     */
+    frames?: number;
+    /**
+     * Longest gap between those frames. A large gap is main-thread jank;
+     * animations the compositor runs can still stutter with a small gap —
+     * use the browser's rendering timeline for those.
+     */
+    maxFrameGap?: number;
+}
+
 /** Options for executing a page transition */
 export interface TransitionOptions {
     /**
@@ -134,4 +174,13 @@ export interface TransitionOptions {
      * debugging.
      */
     onSkipped?: (reason: SkipReason) => void;
+
+    /**
+     * Receives phase durations once an animated transition settles. Opt-in
+     * instrumentation: only when set does the library count frames and
+     * leave `pt:*` measures on the performance timeline. Not called for
+     * navigations that skip the animation up front — `onSkipped` covers
+     * those.
+     */
+    onTiming?: (timing: TransitionTiming) => void;
 }

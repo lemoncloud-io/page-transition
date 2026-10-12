@@ -16,6 +16,7 @@ import {
     resolveScrollKey,
     saveScrollPosition,
 } from './scroll';
+import { createTransitionTimer } from './timing';
 import { claimTransition, getCurrentEntry, releaseTransition } from './transition-state';
 
 import type {
@@ -101,12 +102,13 @@ const runNavigation = async (navigationFn: () => void | Promise<void>): Promise<
 /**
  * Invokes a consumer callback that may be sync, async, or throw either
  * synchronously or via a rejected Promise. All paths are swallowed —
- * an unhandled `onSkipped` rejection must not crash the navigation.
+ * an unhandled `onSkipped`/`onTiming` rejection must not crash the
+ * navigation.
  */
-const safeInvoke = (fn: ((reason: SkipReason) => void | Promise<unknown>) | undefined, reason: SkipReason): void => {
+const safeInvoke = <T>(fn: ((arg: T) => void | Promise<unknown>) | undefined, arg: T): void => {
     if (!fn) return;
     try {
-        const result = fn(reason);
+        const result = fn(arg);
         if (result && typeof (result as Promise<unknown>).catch === 'function') {
             (result as Promise<unknown>).catch(() => {
                 /* swallow async rejection from consumer callback */
@@ -211,9 +213,17 @@ export const executePageTransition = async (
 
     setupAnimationState(options);
 
+    // Opt-in: without `onTiming` no frames are counted and nothing
+    // lands on the performance timeline.
+    const timer = options?.onTiming ? createTransitionTimer() : undefined;
+    // Set when this transition is superseded or aborted. `finished`
+    // fulfils even for a skipped transition, so the timer cannot tell.
+    let skipped = false;
+
     let viewTransition: ViewTransition;
     try {
         viewTransition = startViewTransition(async () => {
+            timer?.markCallback();
             try {
                 await runNavigation(navigationFn);
             } catch (err) {
@@ -236,7 +246,14 @@ export const executePageTransition = async (
         return;
     }
 
-    claimTransition({ vt: viewTransition, onSkipped: options?.onSkipped });
+    timer?.track(viewTransition);
+    claimTransition({
+        vt: viewTransition,
+        onSkipped: reason => {
+            skipped = true;
+            notifySkipped(options, reason);
+        },
+    });
 
     const onAbort = (): void => {
         try {
@@ -244,6 +261,7 @@ export const executePageTransition = async (
         } catch {
             // Ignore — transition may already be done.
         }
+        skipped = true;
         notifySkipped(options, 'aborted');
     };
     options?.signal?.addEventListener('abort', onAbort, { once: true });
@@ -251,13 +269,14 @@ export const executePageTransition = async (
     try {
         await viewTransition.finished;
     } catch {
-        // Swallow — finished can reject if the transition was skipped
-        // or if the callback threw. Scroll pop is handled inside the
+        // Swallow — finished rejects if the callback threw (a skipped
+        // transition still fulfils it). Scroll pop is handled inside the
         // callback's own catch above.
     } finally {
         options?.signal?.removeEventListener('abort', onAbort);
         teardownAnimationState();
         releaseTransition(viewTransition);
+        if (timer) safeInvoke(options?.onTiming, timer.finish(skipped));
     }
 };
 

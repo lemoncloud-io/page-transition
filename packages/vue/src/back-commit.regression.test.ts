@@ -127,6 +127,18 @@ describe('history hop commit', () => {
         await vi.waitFor(() => expect(window.location.pathname).toBe('/detail'));
     });
 
+    it('reports timings to onTiming passed to navigate and goBack', async () => {
+        const onNavigateTiming = vi.fn();
+        await navigation.navigate('/detail', { onTiming: onNavigateTiming });
+        expect(onNavigateTiming).toHaveBeenCalledTimes(1);
+        expect(onNavigateTiming.mock.calls[0]?.[0].outcome).toBe('finished');
+
+        const onBackTiming = vi.fn();
+        await navigation.goBack({ onTiming: onBackTiming });
+        expect(onBackTiming).toHaveBeenCalledTimes(1);
+        expect(onBackTiming.mock.calls[0]?.[0].outcome).toBe('finished');
+    });
+
     describe('when the location never changes', () => {
         beforeEach(() => {
             vi.useFakeTimers();

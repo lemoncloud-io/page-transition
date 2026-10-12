@@ -298,3 +298,129 @@ describe('executePageTransition — scrollRoot', () => {
         expect(__defaultScrollStoreForTest.size()).toBe(0);
     });
 });
+
+describe('executePageTransition — onTiming', () => {
+    // Mirrors the browser's promise order: `finished` fulfils even for a
+    // skipped transition; only `ready` rejects on skip.
+    const browserLikeVT = (cb: () => void | Promise<void>): ViewTransition => {
+        let wasSkipped = false;
+        const updateCallbackDone = Promise.resolve().then(cb);
+        const ready = updateCallbackDone.then(() => {
+            if (wasSkipped) throw new DOMException('Skipped', 'AbortError');
+        });
+        ready.catch(() => undefined);
+        const finished = updateCallbackDone.then(() => ready.catch(() => undefined));
+        return {
+            updateCallbackDone,
+            ready,
+            finished,
+            skipTransition: vi.fn(() => {
+                wasSkipped = true;
+            }),
+        };
+    };
+
+    beforeEach(() => {
+        __resetTransitionState();
+        clearScrollStack();
+        installStartViewTransition(browserLikeVT);
+        vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+        uninstallStartViewTransition();
+        vi.restoreAllMocks();
+    });
+
+    it('counts no frames and leaves no measures without onTiming', async () => {
+        const raf = vi.spyOn(window, 'requestAnimationFrame');
+        const measure = vi.spyOn(performance, 'measure');
+
+        await executePageTransition(() => undefined);
+
+        expect(raf).not.toHaveBeenCalled();
+        expect(measure).not.toHaveBeenCalled();
+    });
+
+    it('reports a finished transition once with every phase', async () => {
+        const onTiming = vi.fn();
+
+        await executePageTransition(() => undefined, { onTiming });
+
+        expect(onTiming).toHaveBeenCalledTimes(1);
+        const timing = onTiming.mock.calls[0]?.[0];
+        expect(timing.outcome).toBe('finished');
+        expect(timing.capture).toEqual(expect.any(Number));
+        expect(timing.update).toEqual(expect.any(Number));
+        expect(timing.start).toEqual(expect.any(Number));
+        expect(timing.animation).toEqual(expect.any(Number));
+    });
+
+    it('reports a superseded transition as skipped and the newer one as finished', async () => {
+        const first = vi.fn();
+        const second = vi.fn();
+
+        const firstRun = executePageTransition(() => undefined, { onTiming: first });
+        const secondRun = executePageTransition(() => undefined, { onTiming: second });
+        await Promise.all([firstRun, secondRun]);
+
+        expect(first).toHaveBeenCalledTimes(1);
+        expect(first.mock.calls[0]?.[0]).toMatchObject({ outcome: 'skipped', animation: undefined });
+        expect(second).toHaveBeenCalledTimes(1);
+        expect(second.mock.calls[0]?.[0].outcome).toBe('finished');
+    });
+
+    it('reports a mid-flight abort as skipped', async () => {
+        const onTiming = vi.fn();
+        const controller = new AbortController();
+
+        const run = executePageTransition(() => undefined, { onTiming, signal: controller.signal });
+        controller.abort();
+        await run;
+
+        expect(onTiming).toHaveBeenCalledTimes(1);
+        expect(onTiming.mock.calls[0]?.[0].outcome).toBe('skipped');
+    });
+
+    it('reports a throwing navigation as error', async () => {
+        const onTiming = vi.fn();
+
+        await executePageTransition(
+            () => {
+                throw new Error('boom');
+            },
+            { onTiming }
+        );
+
+        expect(onTiming).toHaveBeenCalledTimes(1);
+        expect(onTiming.mock.calls[0]?.[0]).toMatchObject({
+            outcome: 'error',
+            update: undefined,
+            start: undefined,
+            animation: undefined,
+        });
+    });
+
+    it('survives an onTiming that throws or rejects', async () => {
+        await expect(
+            executePageTransition(() => undefined, {
+                onTiming: () => {
+                    throw new Error('sync');
+                },
+            })
+        ).resolves.toBeUndefined();
+        await expect(
+            executePageTransition(() => undefined, {
+                onTiming: () => Promise.reject(new Error('async')),
+            })
+        ).resolves.toBeUndefined();
+    });
+
+    it('does not call onTiming for a navigation that skips the animation up front', async () => {
+        const onTiming = vi.fn();
+
+        await executePageTransition(() => undefined, { onTiming, animation: 'none' });
+
+        expect(onTiming).not.toHaveBeenCalled();
+    });
+});

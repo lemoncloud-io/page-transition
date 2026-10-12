@@ -88,6 +88,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 customization,
                 signal,
                 onSkipped,
+                onTiming,
                 legacyFlushSync,
                 scrollRoot,
                 delta,
@@ -172,6 +173,7 @@ export const useNavigateWithTransition = (config?: PageTransitionConfig): Naviga
                 customization,
                 signal,
                 onSkipped,
+                onTiming,
                 scrollRoot,
             });
         },

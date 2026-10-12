@@ -58,6 +58,9 @@ navigate('/path', {
     onSkipped: (reason) => {  // Notified when the animation was bypassed
         // 'unsupported' | 'reduced-motion' | 'animation-none' | 'aborted' | 'superseded'
     },
+    onTiming: (timing) => {   // Phase durations once the animation settles (opt-in)
+        // see @lemoncloud/page-transition-core README — "Measuring a transition"
+    },
     legacyFlushSync: false,   // @experimental — restore pre-v1 flushSync path
 });
 ```
