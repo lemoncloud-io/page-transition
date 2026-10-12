@@ -1,5 +1,27 @@
 # @lemoncloud/react-page-transition
 
+## 1.5.0
+
+### Minor Changes
+
+- 41f0f55: Add `onTiming` to measure a transition.
+
+    Pass `onTiming` to `executePageTransition` (or the React / Vue navigate and
+    goBack helpers) to receive phase durations once an animated transition
+    settles: `capture`, `update` (navigation + new page render), `start` and
+    `animation`, plus the frame count and longest frame gap during the animation,
+    and an `outcome` of `'finished'`, `'skipped'` or `'error'`. A long `update`
+    points at the freeze between tap and motion; a large `maxFrameGap` points at
+    main-thread jank during it.
+
+    Opt-in: only while `onTiming` is set does the library count frames and leave
+    `pt:*` measures on the performance timeline.
+
+### Patch Changes
+
+- Updated dependencies [41f0f55]
+    - @lemoncloud/page-transition-core@1.5.0
+
 ## 1.4.1
 
 ### Patch Changes
@@ -134,8 +156,8 @@
   View Transitions callback throws so a failing navigation no
   longer leaks an entry.
 
-                All new options are optional and the default visual behavior is
-                unchanged — minor release.
+                    All new options are optional and the default visual behavior is
+                    unchanged — minor release.
 
 ### Patch Changes
 
